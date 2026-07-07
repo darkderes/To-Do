@@ -66,4 +66,55 @@ describe('App', () => {
     expect(document.documentElement.dataset.theme).toBe('dark')
     expect(screen.getByRole('button', { name: /cambiar a modo claro/i })).toBeInTheDocument()
   })
+
+  it('shows a default list for new users', () => {
+    render(<App />)
+
+    expect(screen.getByRole('button', { name: 'Mis tareas' })).toBeInTheDocument()
+  })
+
+  it('creates a new list and only shows tasks added while it is selected', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+
+    await user.type(screen.getByLabelText(/nombre de la nueva lista/i), 'Work{Enter}')
+    expect(screen.getByRole('button', { name: 'Work' })).toBeInTheDocument()
+
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Ship feature{Enter}')
+
+    expect(screen.getByText('Ship feature')).toBeInTheDocument()
+    expect(screen.queryByText('Buy milk')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Mis tareas' }))
+
+    expect(screen.getByText('Buy milk')).toBeInTheDocument()
+    expect(screen.queryByText('Ship feature')).not.toBeInTheDocument()
+  })
+
+  it('renames a list', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: /renombrar "mis tareas"/i }))
+    const input = screen.getByLabelText(/renombrar lista mis tareas/i)
+    await user.clear(input)
+    await user.type(input, 'Personal{Enter}')
+
+    expect(screen.getByRole('button', { name: 'Personal' })).toBeInTheDocument()
+  })
+
+  it('deletes a list and its tasks, falling back to another list', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/nombre de la nueva lista/i), 'Work{Enter}')
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Ship feature{Enter}')
+
+    await user.click(screen.getByRole('button', { name: /eliminar lista "work"/i }))
+
+    expect(screen.queryByRole('button', { name: 'Work' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Mis tareas' })).toBeInTheDocument()
+  })
 })

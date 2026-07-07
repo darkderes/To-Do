@@ -1,7 +1,93 @@
 .app {
-  max-width: 480px;
+  display: flex;
+  max-width: 760px;
   margin: 0 auto;
   padding: 32px 16px;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+.app-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-list-sidebar {
+  width: 200px;
+  flex-shrink: 0;
+}
+
+.task-list-nav {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.task-list-nav li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.task-list-button {
+  flex: 1;
+  text-align: left;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.task-list-nav li.active .task-list-button {
+  background: var(--accent);
+  color: #fff;
+}
+
+.task-list-action {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  opacity: 0.6;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.task-list-action:hover {
+  opacity: 1;
+}
+
+.task-list-rename-input {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.add-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.add-list input {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.add-list button {
+  padding: 6px 8px;
+  border: none;
+  border-radius: 4px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
 }
 
 .app-header {
