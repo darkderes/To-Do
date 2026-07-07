@@ -39,4 +39,31 @@ describe('App', () => {
     expect(screen.queryByText('Buy milk')).not.toBeInTheDocument()
     expect(screen.getByText(/aún no hay tareas/i)).toBeInTheDocument()
   })
+
+  it('toggles between light and dark theme and persists the choice', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    expect(document.documentElement.dataset.theme).toBe('light')
+
+    const toggle = screen.getByRole('button', { name: /cambiar a modo oscuro/i })
+    await user.click(toggle)
+
+    expect(document.documentElement.dataset.theme).toBe('dark')
+    expect(window.localStorage.getItem('theme')).toBe('dark')
+    expect(screen.getByRole('button', { name: /cambiar a modo claro/i })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /cambiar a modo claro/i }))
+
+    expect(document.documentElement.dataset.theme).toBe('light')
+    expect(window.localStorage.getItem('theme')).toBe('light')
+  })
+
+  it('restores a previously stored theme preference', () => {
+    window.localStorage.setItem('theme', 'dark')
+    render(<App />)
+
+    expect(document.documentElement.dataset.theme).toBe('dark')
+    expect(screen.getByRole('button', { name: /cambiar a modo claro/i })).toBeInTheDocument()
+  })
 })
