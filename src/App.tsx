@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { AddTodo } from './components/AddTodo'
 import { TodoList } from './components/TodoList'
 import { useLocalStorage } from './hooks/useLocalStorage'
+import { useTheme } from './hooks/useTheme'
 import type { Todo } from './types'
 import './App.css'
 
@@ -10,6 +11,7 @@ type Filter = 'all' | 'active' | 'completed'
 function App() {
   const [todos, setTodos] = useLocalStorage<Todo[]>('todos', [])
   const [filter, setFilter] = useState<Filter>('all')
+  const { theme, toggleTheme } = useTheme()
 
   function addTodo(text: string) {
     setTodos([...todos, { id: crypto.randomUUID(), text, completed: false }])
@@ -43,7 +45,17 @@ function App() {
 
   return (
     <main className="app">
-      <h1>Tareas</h1>
+      <div className="app-header">
+        <h1>Tareas</h1>
+        <button
+          type="button"
+          className="theme-toggle"
+          onClick={toggleTheme}
+          aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+        >
+          {theme === 'dark' ? '☀️' : '🌙'}
+        </button>
+      </div>
       <AddTodo onAdd={addTodo} />
       <div className="filters">
         {(['all', 'active', 'completed'] as const).map((option) => (

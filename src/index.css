@@ -8,7 +8,7 @@
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 
   font: 16px/145% var(--sans);
-  color-scheme: light dark;
+  color-scheme: light;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -17,14 +17,13 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --accent: #c084fc;
-  }
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --text: #9ca3af;
+  --text-h: #f3f4f6;
+  --bg: #16171d;
+  --border: #2e303a;
+  --accent: #c084fc;
 }
 
 body {
