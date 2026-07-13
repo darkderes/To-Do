@@ -3,7 +3,8 @@
   --text-h: #08060d;
   --bg: #fff;
   --border: #e5e4e7;
-  --accent: #aa3bff;
+  --accent: #9328db;
+  --on-accent: var(--bg);
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 
@@ -24,6 +25,7 @@
   --bg: #16171d;
   --border: #2e303a;
   --accent: #c084fc;
+  --on-accent: var(--bg);
 }
 
 body {

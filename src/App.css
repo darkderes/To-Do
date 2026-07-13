@@ -42,7 +42,7 @@
 
 .task-list-nav li.active .task-list-button {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .task-list-action {
@@ -86,7 +86,7 @@
   border: none;
   border-radius: 4px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   cursor: pointer;
 }
 
@@ -141,7 +141,7 @@
   border: none;
   border-radius: 4px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   cursor: pointer;
 }
 
@@ -192,7 +192,6 @@
 .todo-item .completed {
   text-decoration: line-through;
   color: var(--text);
-  opacity: 0.6;
 }
 
 .todo-item .delete {
