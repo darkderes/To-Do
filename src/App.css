@@ -221,11 +221,19 @@
   color: var(--text);
 }
 
-.toast {
+.toast-stack {
   position: fixed;
   left: 50%;
   bottom: 24px;
   transform: translateX(-50%);
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+}
+
+.toast {
   display: flex;
   align-items: center;
   gap: 16px;

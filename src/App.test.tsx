@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from './App'
 
@@ -10,6 +10,7 @@ describe('App', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
+    vi.useRealTimers()
   })
 
   it('adds a new todo', async () => {
@@ -149,6 +150,61 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: /deshacer/i }))
 
     expect(screen.getByText('Buy milk')).toBeInTheDocument()
+  })
+
+  it('moves focus to the undo button after deleting a todo', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+    await user.click(screen.getByRole('button', { name: /eliminar/i }))
+
+    expect(screen.getByRole('button', { name: /deshacer/i })).toHaveFocus()
+  })
+
+  it('keeps an independent undo entry per deleted todo', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Walk dog{Enter}')
+
+    await user.click(screen.getByRole('button', { name: /eliminar "buy milk"/i }))
+    await user.click(screen.getByRole('button', { name: /eliminar "walk dog"/i }))
+
+    expect(screen.getAllByRole('button', { name: /deshacer/i })).toHaveLength(2)
+
+    await user.click(screen.getAllByRole('button', { name: /deshacer/i })[0])
+
+    expect(screen.getByText('Buy milk')).toBeInTheDocument()
+    expect(screen.queryByText('Walk dog')).not.toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /deshacer/i })).toHaveLength(1)
+  })
+
+  it('pauses the auto-dismiss timer while the toast is hovered, and resumes on mouse leave', () => {
+    vi.useFakeTimers()
+    render(<App />)
+
+    fireEvent.change(screen.getByLabelText(/texto de la nueva tarea/i), {
+      target: { value: 'Buy milk' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Añadir' }))
+    fireEvent.click(screen.getByRole('button', { name: /eliminar/i }))
+
+    const toast = screen.getByRole('status')
+    fireEvent.mouseEnter(toast)
+    act(() => {
+      vi.advanceTimersByTime(8000)
+    })
+
+    expect(screen.getByRole('button', { name: /deshacer/i })).toBeInTheDocument()
+
+    fireEvent.mouseLeave(toast)
+    act(() => {
+      vi.advanceTimersByTime(5100)
+    })
+
+    expect(screen.queryByRole('button', { name: /deshacer/i })).not.toBeInTheDocument()
   })
 
   it('shows a targeted message when a filter hides existing tasks', async () => {

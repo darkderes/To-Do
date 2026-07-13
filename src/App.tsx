@@ -1,15 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { AddTodo } from './components/AddTodo'
 import { TodoList } from './components/TodoList'
 import { TaskListSidebar } from './components/TaskListSidebar'
+import { UndoToastStack } from './components/UndoToastStack'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { useTheme } from './hooks/useTheme'
+import { useUndoQueue } from './hooks/useUndoQueue'
 import type { Filter, TaskList, Todo } from './types'
 import './App.css'
 
 const DEFAULT_LIST_ID = 'default'
 const DEFAULT_LISTS: TaskList[] = [{ id: DEFAULT_LIST_ID, name: 'Mis tareas' }]
-const UNDO_TIMEOUT_MS = 5000
 
 interface PendingDelete {
   todo: Todo
@@ -24,14 +25,8 @@ function App() {
     DEFAULT_LIST_ID,
   )
   const [filter, setFilter] = useLocalStorage<Filter>('filter', 'all')
-  const [lastDeleted, setLastDeleted] = useState<PendingDelete | null>(null)
+  const undoQueue = useUndoQueue<PendingDelete>()
   const { theme, toggleTheme } = useTheme()
-
-  useEffect(() => {
-    if (!lastDeleted) return
-    const timeoutId = window.setTimeout(() => setLastDeleted(null), UNDO_TIMEOUT_MS)
-    return () => window.clearTimeout(timeoutId)
-  }, [lastDeleted])
 
   function addList(name: string) {
     const newList: TaskList = { id: crypto.randomUUID(), name }
@@ -80,16 +75,17 @@ function App() {
   function deleteTodo(id: string) {
     const index = todos.findIndex((todo) => todo.id === id)
     if (index === -1) return
-    setLastDeleted({ todo: todos[index], index })
+    undoQueue.push({ todo: todos[index], index })
     setTodos(todos.filter((todo) => todo.id !== id))
   }
 
-  function undoDelete() {
-    if (!lastDeleted) return
+  function undoDelete(entryId: string) {
+    const entry = undoQueue.entries.find((candidate) => candidate.id === entryId)
+    if (!entry) return
     const restored = [...todos]
-    restored.splice(lastDeleted.index, 0, lastDeleted.todo)
+    restored.splice(entry.item.index, 0, entry.item.todo)
     setTodos(restored)
-    setLastDeleted(null)
+    undoQueue.dismiss(entryId)
   }
 
   const listTodos = useMemo(
@@ -157,14 +153,12 @@ function App() {
           {activeCount} {activeCount === 1 ? 'tarea pendiente' : 'tareas pendientes'}
         </p>
       </main>
-      {lastDeleted && (
-        <div className="toast" role="status">
-          <span>Tarea eliminada</span>
-          <button type="button" onClick={undoDelete}>
-            Deshacer
-          </button>
-        </div>
-      )}
+      <UndoToastStack
+        entries={undoQueue.entries}
+        onUndo={undoDelete}
+        onPause={undoQueue.pause}
+        onResume={undoQueue.resume}
+      />
     </div>
   )
 }
