@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from './App'
@@ -6,6 +6,10 @@ import App from './App'
 describe('App', () => {
   beforeEach(() => {
     window.localStorage.clear()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   it('adds a new todo', async () => {
@@ -105,7 +109,8 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'Personal' })).toBeInTheDocument()
   })
 
-  it('deletes a list and its tasks, falling back to another list', async () => {
+  it('deletes a list and its tasks after confirming, falling back to another list', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
     const user = userEvent.setup()
     render(<App />)
 
@@ -114,7 +119,45 @@ describe('App', () => {
 
     await user.click(screen.getByRole('button', { name: /eliminar lista "work"/i }))
 
+    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('Work'))
     expect(screen.queryByRole('button', { name: 'Work' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Mis tareas' })).toBeInTheDocument()
+  })
+
+  it('keeps a list and its tasks when the deletion is not confirmed', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/nombre de la nueva lista/i), 'Work{Enter}')
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Ship feature{Enter}')
+
+    await user.click(screen.getByRole('button', { name: /eliminar lista "work"/i }))
+
+    expect(screen.getByRole('button', { name: 'Work' })).toBeInTheDocument()
+  })
+
+  it('undoes a todo deletion within the undo window', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+    await user.click(screen.getByRole('button', { name: /eliminar/i }))
+
+    expect(screen.queryByText('Buy milk')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /deshacer/i }))
+
+    expect(screen.getByText('Buy milk')).toBeInTheDocument()
+  })
+
+  it('shows a targeted message when a filter hides existing tasks', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+    await user.click(screen.getByRole('button', { name: 'completadas' }))
+
+    expect(screen.getByText(/no hay tareas completadas todavía/i)).toBeInTheDocument()
   })
 })

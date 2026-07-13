@@ -1,16 +1,20 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AddTodo } from './components/AddTodo'
 import { TodoList } from './components/TodoList'
 import { TaskListSidebar } from './components/TaskListSidebar'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { useTheme } from './hooks/useTheme'
-import type { TaskList, Todo } from './types'
+import type { Filter, TaskList, Todo } from './types'
 import './App.css'
-
-type Filter = 'all' | 'active' | 'completed'
 
 const DEFAULT_LIST_ID = 'default'
 const DEFAULT_LISTS: TaskList[] = [{ id: DEFAULT_LIST_ID, name: 'Mis tareas' }]
+const UNDO_TIMEOUT_MS = 5000
+
+interface PendingDelete {
+  todo: Todo
+  index: number
+}
 
 function App() {
   const [lists, setLists] = useLocalStorage<TaskList[]>('taskLists', DEFAULT_LISTS)
@@ -19,8 +23,15 @@ function App() {
     'selectedListId',
     DEFAULT_LIST_ID,
   )
-  const [filter, setFilter] = useState<Filter>('all')
+  const [filter, setFilter] = useLocalStorage<Filter>('filter', 'all')
+  const [lastDeleted, setLastDeleted] = useState<PendingDelete | null>(null)
   const { theme, toggleTheme } = useTheme()
+
+  useEffect(() => {
+    if (!lastDeleted) return
+    const timeoutId = window.setTimeout(() => setLastDeleted(null), UNDO_TIMEOUT_MS)
+    return () => window.clearTimeout(timeoutId)
+  }, [lastDeleted])
 
   function addList(name: string) {
     const newList: TaskList = { id: crypto.randomUUID(), name }
@@ -34,7 +45,16 @@ function App() {
 
   function deleteList(id: string) {
     if (lists.length <= 1) return
-    const remaining = lists.filter((list) => list.id !== id)
+    const list = lists.find((candidate) => candidate.id === id)
+    const listTodoCount = todos.filter((todo) => todo.listId === id).length
+    if (listTodoCount > 0) {
+      const noun = listTodoCount === 1 ? 'tarea' : 'tareas'
+      const confirmed = window.confirm(
+        `"${list?.name}" tiene ${listTodoCount} ${noun}. ¿Eliminar la lista y sus tareas?`,
+      )
+      if (!confirmed) return
+    }
+    const remaining = lists.filter((candidate) => candidate.id !== id)
     setLists(remaining)
     setTodos(todos.filter((todo) => todo.listId !== id))
     if (selectedListId === id) {
@@ -58,7 +78,18 @@ function App() {
   }
 
   function deleteTodo(id: string) {
+    const index = todos.findIndex((todo) => todo.id === id)
+    if (index === -1) return
+    setLastDeleted({ todo: todos[index], index })
     setTodos(todos.filter((todo) => todo.id !== id))
+  }
+
+  function undoDelete() {
+    if (!lastDeleted) return
+    const restored = [...todos]
+    restored.splice(lastDeleted.index, 0, lastDeleted.todo)
+    setTodos(restored)
+    setLastDeleted(null)
   }
 
   const listTodos = useMemo(
@@ -117,6 +148,8 @@ function App() {
         </div>
         <TodoList
           todos={visibleTodos}
+          filter={filter}
+          hasAnyTodos={listTodos.length > 0}
           onToggle={toggleTodo}
           onDelete={deleteTodo}
         />
@@ -124,6 +157,14 @@ function App() {
           {activeCount} {activeCount === 1 ? 'tarea pendiente' : 'tareas pendientes'}
         </p>
       </main>
+      {lastDeleted && (
+        <div className="toast" role="status">
+          <span>Tarea eliminada</span>
+          <button type="button" onClick={undoDelete}>
+            Deshacer
+          </button>
+        </div>
+      )}
     </div>
   )
 }

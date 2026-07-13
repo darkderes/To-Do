@@ -9,3 +9,5 @@ export interface TaskList {
   id: string
   name: string
 }
+
+export type Filter = 'all' | 'active' | 'completed'

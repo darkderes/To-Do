@@ -1,15 +1,24 @@
-import type { Todo } from '../types'
+import type { Filter, Todo } from '../types'
 import { TodoItem } from './TodoItem'
 
 interface TodoListProps {
   todos: Todo[]
+  filter: Filter
+  hasAnyTodos: boolean
   onToggle: (id: string) => void
   onDelete: (id: string) => void
 }
 
-export function TodoList({ todos, onToggle, onDelete }: TodoListProps) {
+const EMPTY_MESSAGES: Record<Filter, string> = {
+  all: 'Aún no hay tareas — añade una arriba.',
+  active: 'No hay tareas activas — ¡todo al día!',
+  completed: 'No hay tareas completadas todavía.',
+}
+
+export function TodoList({ todos, filter, hasAnyTodos, onToggle, onDelete }: TodoListProps) {
   if (todos.length === 0) {
-    return <p className="empty-state">Aún no hay tareas — añade una arriba.</p>
+    const message = hasAnyTodos ? EMPTY_MESSAGES[filter] : EMPTY_MESSAGES.all
+    return <p className="empty-state">{message}</p>
   }
 
   return (
