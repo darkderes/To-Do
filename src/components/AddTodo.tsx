@@ -19,13 +19,18 @@ export function AddTodo({ onAdd }: AddTodoProps) {
   return (
     <div className="add-todo-bar">
       <form className="add-todo" onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={text}
-          onChange={(event) => setText(event.target.value)}
-          placeholder="Agregar tarea"
-          aria-label="Texto de la nueva tarea"
-        />
+        <div className="input-with-icon">
+          <span className="input-icon" aria-hidden="true">
+            +
+          </span>
+          <input
+            type="text"
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            placeholder="Agregar tarea"
+            aria-label="Texto de la nueva tarea"
+          />
+        </div>
         <button type="submit">Añadir</button>
       </form>
     </div>

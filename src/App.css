@@ -140,18 +140,45 @@
   color: var(--text-h);
 }
 
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 1.1rem;
+  line-height: 1;
+  pointer-events: none;
+}
+
 .add-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+.add-list .input-with-icon {
+  width: 100%;
+}
+
 .add-list input {
-  padding: 6px 8px;
+  width: 100%;
+  padding: 6px 8px 6px 28px;
   border: 1px solid var(--border);
   border-radius: 4px;
   background: var(--bg);
   color: var(--text-h);
+}
+
+.add-list input::placeholder {
+  color: var(--text-h);
+  opacity: 0.65;
+  font-weight: 500;
 }
 
 .add-list button {
@@ -249,14 +276,24 @@
   margin: 0 auto;
 }
 
-.add-todo input {
+.add-todo .input-with-icon {
   flex: 1;
-  padding: 8px 12px;
+}
+
+.add-todo input {
+  width: 100%;
+  padding: 8px 12px 8px 32px;
   border: 1px solid var(--border);
   border-radius: 4px;
   font-size: 1rem;
   background: var(--bg);
   color: var(--text-h);
+}
+
+.add-todo input::placeholder {
+  color: var(--text-h);
+  opacity: 0.65;
+  font-weight: 500;
 }
 
 .add-todo button {

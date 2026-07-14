@@ -399,13 +399,18 @@ export function TaskListSidebar({
         })}
       </ul>
       <form className="add-list" onSubmit={handleAddSubmit}>
-        <input
-          type="text"
-          value={newListName}
-          onChange={(event) => setNewListName(event.target.value)}
-          placeholder="Nueva lista"
-          aria-label="Nombre de la nueva lista"
-        />
+        <div className="input-with-icon">
+          <span className="input-icon" aria-hidden="true">
+            +
+          </span>
+          <input
+            type="text"
+            value={newListName}
+            onChange={(event) => setNewListName(event.target.value)}
+            placeholder="Nueva lista"
+            aria-label="Nombre de la nueva lista"
+          />
+        </div>
         <button type="submit">Añadir lista</button>
       </form>
       <div className="sidebar-settings">
