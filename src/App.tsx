@@ -276,19 +276,17 @@ function App() {
             <span aria-hidden="true">☰</span>
           </button>
           <h1>{selectedListName}</h1>
-          <button
-            type="button"
-            className="theme-toggle"
-            onClick={toggleTheme}
-            aria-label={
-              theme === 'dark'
-                ? 'Cambiar a modo claro'
-                : 'Cambiar a modo oscuro'
-            }
-          >
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
         </div>
+        <button
+          type="button"
+          className="theme-toggle"
+          onClick={toggleTheme}
+          aria-label={
+            theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
+          }
+        >
+          {theme === 'dark' ? '☀️' : '🌙'}
+        </button>
         <TodoList
           todos={activeTodos}
           emptyMessage={activeEmptyMessage}

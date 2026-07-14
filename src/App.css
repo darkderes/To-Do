@@ -246,6 +246,10 @@
 }
 
 .theme-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 6;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -253,7 +257,7 @@
   height: 36px;
   border: 1px solid var(--border);
   border-radius: 999px;
-  background: transparent;
+  background: var(--bg);
   font-size: 1rem;
   line-height: 1;
   cursor: pointer;
@@ -592,7 +596,7 @@
     display: flex;
   }
 
-  .app-header .theme-toggle {
+  .theme-toggle {
     display: none;
   }
 
