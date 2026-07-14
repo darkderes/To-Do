@@ -294,8 +294,22 @@
 }
 
 .todo-item {
-  padding: 8px 0;
+  position: relative;
+  overflow: hidden;
   border-bottom: 1px solid var(--border);
+}
+
+.todo-item-reveal {
+  display: none;
+}
+
+.todo-item-row {
+  padding: 8px 0;
+  position: relative;
+  z-index: 1;
+  background: var(--bg);
+  transition: transform 0.2s ease;
+  touch-action: pan-y;
 }
 
 .todo-item-main {
@@ -358,6 +372,19 @@
   line-height: 1;
   cursor: pointer;
   padding: 4px 8px;
+}
+
+.todo-drag-handle {
+  display: none;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  opacity: 0.6;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 2px 8px;
+  cursor: grab;
+  touch-action: none;
 }
 
 .todo-item-meta {
@@ -509,6 +536,10 @@
     display: none;
   }
 
+  .add-todo button[type='submit'] {
+    display: none;
+  }
+
   .app-header .theme-toggle {
     display: none;
   }
@@ -542,6 +573,37 @@
   }
 
   .task-list-drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .todo-item-reveal {
+    display: flex;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 88px;
+  }
+
+  .todo-item-swipe-delete {
+    flex: 1;
+    border: none;
+    background: #dc2626;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .todo-item .reorder.move-up,
+  .todo-item .reorder.move-down,
+  .todo-item .delete {
+    display: none;
+  }
+
+  .todo-drag-handle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -585,5 +647,4 @@
     visibility: visible;
     transition: transform 0.2s ease;
   }
-
 }

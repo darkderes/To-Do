@@ -85,7 +85,12 @@ function App() {
   function addTodo(text: string) {
     setTodos([
       ...todos,
-      { id: crypto.randomUUID(), text, completed: false, listId: selectedListId },
+      {
+        id: crypto.randomUUID(),
+        text,
+        completed: false,
+        listId: selectedListId,
+      },
     ])
   }
 
@@ -203,6 +208,29 @@ function App() {
     setTodos(updated)
   }
 
+  function reorderTodo(id: string, targetVisibleIndex: number) {
+    const currentVisibleIndex = visibleTodos.findIndex((todo) => todo.id === id)
+    if (
+      currentVisibleIndex === -1 ||
+      currentVisibleIndex === targetVisibleIndex
+    )
+      return
+    const targetTodo = visibleTodos[targetVisibleIndex]
+    const dragged = todos.find((todo) => todo.id === id)
+    if (!dragged) return
+    const withoutDragged = todos.filter((todo) => todo.id !== id)
+    const targetFullIndex = withoutDragged.findIndex(
+      (todo) => todo.id === targetTodo.id,
+    )
+    const insertIndex =
+      currentVisibleIndex < targetVisibleIndex
+        ? targetFullIndex + 1
+        : targetFullIndex
+    const updated = [...withoutDragged]
+    updated.splice(insertIndex, 0, dragged)
+    setTodos(updated)
+  }
+
   const filterLabels: Record<Filter, string> = {
     all: 'todas',
     active: 'activas',
@@ -303,6 +331,7 @@ function App() {
           onDelete={deleteTodo}
           onMoveUp={(id) => moveTodo(id, 'up')}
           onMoveDown={(id) => moveTodo(id, 'down')}
+          onReorderTo={reorderTodo}
           onUpdateMeta={updateTodoMeta}
         />
         <p className="count">

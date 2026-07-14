@@ -609,14 +609,108 @@ describe('App', () => {
     expect(handle).toHaveAttribute('tabIndex', '-1')
   })
 
+  function mockMobileMatchMedia() {
+    vi.spyOn(window, 'matchMedia').mockReturnValue({
+      matches: true,
+      media: '(max-width: 640px)',
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    } as MediaQueryList)
+  }
+
+  it('reveals a real delete button when swiping a mobile todo row left, and removes it on tap', async () => {
+    mockMobileMatchMedia()
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+
+    const row = document.querySelectorAll('.todo-item-row')[0]
+    fireEvent.pointerDown(row, { clientX: 300, clientY: 50, pointerId: 1 })
+    fireEvent.pointerMove(row, { clientX: 240, clientY: 50, pointerId: 1 })
+    fireEvent.pointerMove(row, { clientX: 200, clientY: 50, pointerId: 1 })
+    fireEvent.pointerUp(row, { clientX: 200, clientY: 50, pointerId: 1 })
+
+    const revealButton = screen.getByRole('button', {
+      name: /quitar "buy milk"/i,
+    })
+    expect(revealButton).toBeInTheDocument()
+
+    await user.click(revealButton)
+
+    expect(screen.queryByText('Buy milk')).not.toBeInTheDocument()
+  })
+
+  it('reorders todos by dragging the mobile drag handle', async () => {
+    mockMobileMatchMedia()
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Walk dog{Enter}',
+    )
+
+    const handles = document.querySelectorAll('.todo-drag-handle')
+    expect(handles).toHaveLength(2)
+
+    fireEvent.pointerDown(handles[0], {
+      clientX: 20,
+      clientY: 10,
+      pointerId: 1,
+    })
+    fireEvent.pointerMove(handles[0], {
+      clientX: 20,
+      clientY: 80,
+      pointerId: 1,
+    })
+    fireEvent.pointerUp(handles[0], { clientX: 20, clientY: 80, pointerId: 1 })
+
+    const items = document.querySelectorAll('.todo-item-main span')
+    expect(items[0]).toHaveTextContent('Walk dog')
+    expect(items[1]).toHaveTextContent('Buy milk')
+  })
+
+  it('excludes the todo drag handle from the accessibility tree and tab order', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+
+    const handle = document.querySelector('.todo-drag-handle')
+    expect(handle).toHaveAttribute('aria-hidden', 'true')
+    expect(handle).toHaveAttribute('tabIndex', '-1')
+  })
+
   it('adds a todo with just its text, with no due date or priority fields on the form', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    expect(screen.queryByLabelText(/fecha límite \(opcional\)/i)).not.toBeInTheDocument()
-    expect(screen.queryByLabelText(/prioridad \(opcional\)/i)).not.toBeInTheDocument()
+    expect(
+      screen.queryByLabelText(/fecha límite \(opcional\)/i),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByLabelText(/prioridad \(opcional\)/i),
+    ).not.toBeInTheDocument()
 
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
 
     expect(screen.getByText('Buy milk')).toBeInTheDocument()
     expect(document.querySelector('.due-badge')).not.toBeInTheDocument()
