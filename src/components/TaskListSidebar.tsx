@@ -4,6 +4,7 @@ import type {
   KeyboardEvent,
   PointerEvent as ReactPointerEvent,
 } from 'react'
+import { MY_DAY_ID } from '../types'
 import type { TaskList } from '../types'
 
 const REVEAL_WIDTH = 88
@@ -76,7 +77,7 @@ export function TaskListSidebar({
   useEffect(() => {
     if (!isOpen) return
     navRef.current
-      ?.querySelector<HTMLButtonElement>('.task-list-button')
+      ?.querySelector<HTMLButtonElement>('.task-list-nav .task-list-button')
       ?.focus()
   }, [isOpen])
 
@@ -241,6 +242,17 @@ export function TaskListSidebar({
       className={`task-list-sidebar${isOpen ? ' open' : ''}`}
       aria-label="Listas de tareas"
     >
+      <ul className="my-day-nav">
+        <li className={selectedListId === MY_DAY_ID ? 'active' : ''}>
+          <button
+            type="button"
+            className="task-list-button"
+            onClick={() => onSelect(MY_DAY_ID)}
+          >
+            ☀️ Mi día
+          </button>
+        </li>
+      </ul>
       <ul className="task-list-nav">
         {lists.map((list, index) => {
           const isDraggingThis = liveOffset?.id === list.id

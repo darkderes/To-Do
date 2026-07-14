@@ -768,4 +768,58 @@ describe('App', () => {
       screen.getByText(/no hay tareas completadas todavía/i),
     ).toBeInTheDocument()
   })
+
+  it('shows only tasks flagged for today in "Mi día", toggled via the sun icon', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+
+    await user.click(screen.getByRole('button', { name: '☀️ Mi día' }))
+    expect(
+      screen.getByText(/nada marcado para hoy/i),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Mis tareas' }))
+    await user.click(
+      screen.getByRole('button', { name: /añadir "buy milk" a mi día/i }),
+    )
+
+    await user.click(screen.getByRole('button', { name: '☀️ Mi día' }))
+    expect(screen.getByText('Buy milk')).toBeInTheDocument()
+
+    await user.click(
+      screen.getByRole('button', { name: /quitar "buy milk" de mi día/i }),
+    )
+    expect(
+      screen.getByText(/nada marcado para hoy/i),
+    ).toBeInTheDocument()
+  })
+
+  it('adds tasks created while viewing "Mi día" to the last real list used, flagged for today', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/nombre de la nueva lista/i),
+      'Trabajo{Enter}',
+    )
+
+    await user.click(screen.getByRole('button', { name: '☀️ Mi día' }))
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Send report{Enter}',
+    )
+
+    expect(screen.getByText('Send report')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Trabajo' }))
+    expect(screen.getByText('Send report')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Mis tareas' }))
+    expect(screen.queryByText('Send report')).not.toBeInTheDocument()
+  })
 })

@@ -6,6 +6,7 @@ import { UndoToastStack } from './components/UndoToastStack'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { useTheme } from './hooks/useTheme'
 import { useUndoQueue } from './hooks/useUndoQueue'
+import { MY_DAY_ID, getTodayString } from './types'
 import type { Filter, Priority, TaskList, Todo } from './types'
 import './App.css'
 
@@ -27,11 +28,17 @@ function App() {
     'selectedListId',
     DEFAULT_LIST_ID,
   )
+  const [lastRealListId, setLastRealListId] = useLocalStorage<string>(
+    'lastRealListId',
+    DEFAULT_LIST_ID,
+  )
   const [filter, setFilter] = useLocalStorage<Filter>('filter', 'all')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const sidebarToggleRef = useRef<HTMLButtonElement>(null)
   const undoQueue = useUndoQueue<PendingDelete>()
   const { theme, toggleTheme } = useTheme()
+  const today = getTodayString()
+  const isMyDay = selectedListId === MY_DAY_ID
 
   function closeSidebar() {
     setIsSidebarOpen(false)
@@ -49,6 +56,7 @@ function App() {
 
   function selectList(id: string) {
     setSelectedListId(id)
+    if (id !== MY_DAY_ID) setLastRealListId(id)
     setFilter('all')
     closeSidebar()
   }
@@ -77,6 +85,7 @@ function App() {
     const remaining = lists.filter((candidate) => candidate.id !== id)
     setLists(remaining)
     setTodos(todos.filter((todo) => todo.listId !== id))
+    if (lastRealListId === id) setLastRealListId(remaining[0].id)
     if (selectedListId === id) {
       selectList(remaining[0].id)
     }
@@ -89,9 +98,20 @@ function App() {
         id: crypto.randomUUID(),
         text,
         completed: false,
-        listId: selectedListId,
+        listId: isMyDay ? lastRealListId : selectedListId,
+        ...(isMyDay ? { myDay: today } : {}),
       },
     ])
+  }
+
+  function toggleMyDay(id: string) {
+    setTodos(
+      todos.map((todo) =>
+        todo.id === id
+          ? { ...todo, myDay: todo.myDay === today ? undefined : today }
+          : todo,
+      ),
+    )
   }
 
   function toggleTodo(id: string) {
@@ -132,11 +152,15 @@ function App() {
     undoQueue.dismiss(entryId)
   }
 
+  function isInView(todo: Todo) {
+    return isMyDay ? todo.myDay === today : todo.listId === selectedListId
+  }
+
   function toggleAllComplete() {
-    const hasActive = todos.some((todo) => todo.listId === selectedListId && !todo.completed)
+    const hasActive = todos.some((todo) => isInView(todo) && !todo.completed)
     setTodos(
       todos.map((todo) =>
-        todo.listId === selectedListId ? { ...todo, completed: hasActive } : todo,
+        isInView(todo) ? { ...todo, completed: hasActive } : todo,
       ),
     )
   }
@@ -144,7 +168,7 @@ function App() {
   function clearCompleted() {
     let remaining = todos
     todos
-      .filter((todo) => todo.listId === selectedListId && todo.completed)
+      .filter((todo) => isInView(todo) && todo.completed)
       .forEach((todo) => {
         const index = remaining.findIndex(
           (candidate) => candidate.id === todo.id,
@@ -179,10 +203,12 @@ function App() {
 
   const listTodos = useMemo(
     () =>
-      todos.filter(
-        (todo) => (todo.listId ?? DEFAULT_LIST_ID) === selectedListId,
+      todos.filter((todo) =>
+        isMyDay
+          ? todo.myDay === today
+          : (todo.listId ?? DEFAULT_LIST_ID) === selectedListId,
       ),
-    [todos, selectedListId],
+    [todos, selectedListId, isMyDay, today],
   )
 
   const visibleTodos = useMemo(() => {
@@ -239,6 +265,7 @@ function App() {
   }
 
   const selectedList = lists.find((list) => list.id === selectedListId)
+  const selectedListName = isMyDay ? 'Mi día' : (selectedList?.name ?? '')
 
   return (
     <div className="app">
@@ -271,14 +298,14 @@ function App() {
             ref={sidebarToggleRef}
             aria-expanded={isSidebarOpen}
             aria-controls="task-list-sidebar"
-            aria-label={`Listas de tareas, lista actual: ${selectedList?.name ?? ''}`}
+            aria-label={`Listas de tareas, lista actual: ${selectedListName}`}
             onClick={() => setIsSidebarOpen((open) => !open)}
           >
             <span aria-hidden="true">☰</span>
           </button>
           <h1>
             <span className="title-app">Tareas</span>
-            <span className="title-list">{selectedList?.name}</span>
+            <span className="title-list">{selectedListName}</span>
           </h1>
           <button
             type="button"
@@ -324,12 +351,17 @@ function App() {
           todos={visibleTodos}
           filter={filter}
           hasAnyTodos={listTodos.length > 0}
+          emptyAllMessage={
+            isMyDay ? 'Nada marcado para hoy — usa ☀️ en cualquier tarea.' : undefined
+          }
           onToggle={toggleTodo}
           onDelete={deleteTodo}
           onMoveUp={(id) => moveTodo(id, 'up')}
           onMoveDown={(id) => moveTodo(id, 'down')}
           onReorderTo={reorderTodo}
           onUpdateMeta={updateTodoMeta}
+          onToggleMyDay={toggleMyDay}
+          today={today}
         />
         <p className="count">
           {activeCount}{' '}

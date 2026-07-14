@@ -15,7 +15,9 @@ interface TodoItemProps {
   rowTransitionNone: boolean
   liStyle: CSSProperties
   isSwipeOpen: boolean
+  isInMyDay: boolean
   onToggle: (id: string) => void
+  onToggleMyDay: (id: string) => void
   onDelete: (id: string) => void
   onMoveUp: (id: string) => void
   onMoveDown: (id: string) => void
@@ -48,7 +50,9 @@ export function TodoItem({
   rowTransitionNone,
   liStyle,
   isSwipeOpen,
+  isInMyDay,
   onToggle,
+  onToggleMyDay,
   onDelete,
   onMoveUp,
   onMoveDown,
@@ -194,6 +198,19 @@ export function TodoItem({
                 {PRIORITY_LABELS[todo.priority]}
               </span>
             )}
+            <button
+              type="button"
+              className={`my-day-toggle${isInMyDay ? ' active' : ''}`}
+              aria-label={
+                isInMyDay
+                  ? `Quitar "${todo.text}" de Mi día`
+                  : `Añadir "${todo.text}" a Mi día`
+              }
+              aria-pressed={isInMyDay}
+              onClick={() => onToggleMyDay(todo.id)}
+            >
+              ☀️
+            </button>
             <button
               type="button"
               className="edit-meta"

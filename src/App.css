@@ -50,6 +50,18 @@
   padding: 0;
 }
 
+.my-day-nav {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.my-day-nav li.active .task-list-button {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
 .task-list-nav li {
   position: relative;
   overflow: hidden;
@@ -462,6 +474,25 @@
 
 .edit-meta:hover {
   opacity: 1;
+}
+
+.my-day-toggle {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 2px 4px;
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+.my-day-toggle:hover {
+  opacity: 0.7;
+}
+
+.my-day-toggle.active {
+  opacity: 1;
+  filter: none;
 }
 
 .empty-state {

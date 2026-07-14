@@ -36,6 +36,7 @@ interface TodoListProps {
   todos: Todo[]
   filter: Filter
   hasAnyTodos: boolean
+  emptyAllMessage?: string
   onToggle: (id: string) => void
   onDelete: (id: string) => void
   onMoveUp: (id: string) => void
@@ -46,6 +47,8 @@ interface TodoListProps {
     dueDate: string | undefined,
     priority: Priority | undefined,
   ) => void
+  onToggleMyDay: (id: string) => void
+  today: string
 }
 
 const EMPTY_MESSAGES: Record<Filter, string> = {
@@ -58,12 +61,15 @@ export function TodoList({
   todos,
   filter,
   hasAnyTodos,
+  emptyAllMessage,
   onToggle,
   onDelete,
   onMoveUp,
   onMoveDown,
   onReorderTo,
   onUpdateMeta,
+  onToggleMyDay,
+  today,
 }: TodoListProps) {
   const [openSwipeId, setOpenSwipeId] = useState<string | null>(null)
   const [liveOffset, setLiveOffset] = useState<{
@@ -197,7 +203,9 @@ export function TodoList({
   }
 
   if (todos.length === 0) {
-    const message = hasAnyTodos ? EMPTY_MESSAGES[filter] : EMPTY_MESSAGES.all
+    const message = hasAnyTodos
+      ? EMPTY_MESSAGES[filter]
+      : (emptyAllMessage ?? EMPTY_MESSAGES.all)
     return <p className="empty-state">{message}</p>
   }
 
@@ -249,7 +257,9 @@ export function TodoList({
               zIndex: reorderDrag?.id === todo.id ? 30 : undefined,
             }}
             isSwipeOpen={openSwipeId === todo.id}
+            isInMyDay={todo.myDay === today}
             onToggle={onToggle}
+            onToggleMyDay={onToggleMyDay}
             onDelete={onDelete}
             onMoveUp={onMoveUp}
             onMoveDown={onMoveDown}
