@@ -189,18 +189,6 @@ function App() {
 
   return (
     <div className="app">
-      <button
-        type="button"
-        className="sidebar-toggle"
-        ref={sidebarToggleRef}
-        aria-expanded={isSidebarOpen}
-        aria-controls="task-list-sidebar"
-        aria-label={`Listas de tareas, lista actual: ${selectedList?.name ?? ''}`}
-        onClick={() => setIsSidebarOpen((open) => !open)}
-      >
-        <span aria-hidden="true">☰</span>{' '}
-        <span aria-hidden="true">{selectedList?.name ?? 'Listas'}</span>
-      </button>
       {isSidebarOpen && (
         <div className="sidebar-backdrop" onClick={closeSidebar} aria-hidden="true" />
       )}
@@ -217,7 +205,21 @@ function App() {
       />
       <main className="app-content">
         <div className="app-header">
-          <h1>Tareas</h1>
+          <button
+            type="button"
+            className="sidebar-toggle"
+            ref={sidebarToggleRef}
+            aria-expanded={isSidebarOpen}
+            aria-controls="task-list-sidebar"
+            aria-label={`Listas de tareas, lista actual: ${selectedList?.name ?? ''}`}
+            onClick={() => setIsSidebarOpen((open) => !open)}
+          >
+            <span aria-hidden="true">☰</span>
+          </button>
+          <h1>
+            <span className="title-app">Tareas</span>
+            <span className="title-list">{selectedList?.name}</span>
+          </h1>
           <button
             type="button"
             className="theme-toggle"

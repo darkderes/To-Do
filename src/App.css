@@ -20,16 +20,24 @@
 .sidebar-toggle {
   display: none;
   align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 12px;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   border: 1px solid var(--border);
-  border-radius: 4px;
-  background: var(--bg);
+  border-radius: 999px;
+  background: transparent;
   color: var(--text-h);
-  font-size: 1rem;
-  text-align: left;
+  font-size: 1.1rem;
+  line-height: 1;
   cursor: pointer;
+}
+
+.sidebar-toggle:hover {
+  border-color: var(--accent);
+}
+
+.title-list {
+  display: none;
 }
 
 .sidebar-backdrop {
@@ -414,9 +422,21 @@
 }
 
 @media (max-width: 640px) {
-  .app {
-    flex-direction: column;
-    gap: 12px;
+  .app-header {
+    justify-content: space-between;
+  }
+
+  .app-header h1 {
+    flex: 1;
+    text-align: center;
+  }
+
+  .title-app {
+    display: none;
+  }
+
+  .title-list {
+    display: inline;
   }
 
   .sidebar-toggle {
