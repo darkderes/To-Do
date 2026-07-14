@@ -132,10 +132,11 @@ function App() {
     undoQueue.dismiss(entryId)
   }
 
-  function markAllComplete() {
+  function toggleAllComplete() {
+    const hasActive = todos.some((todo) => todo.listId === selectedListId && !todo.completed)
     setTodos(
       todos.map((todo) =>
-        todo.listId === selectedListId ? { ...todo, completed: true } : todo,
+        todo.listId === selectedListId ? { ...todo, completed: hasActive } : todo,
       ),
     )
   }
@@ -307,12 +308,8 @@ function App() {
         </div>
         {listTodos.length > 0 && (
           <div className="batch-actions">
-            <button
-              type="button"
-              onClick={markAllComplete}
-              disabled={activeCount === 0}
-            >
-              Marcar todas
+            <button type="button" onClick={toggleAllComplete}>
+              {activeCount === 0 ? 'Desmarcar todas' : 'Marcar todas'}
             </button>
             <button
               type="button"

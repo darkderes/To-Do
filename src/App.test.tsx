@@ -409,7 +409,7 @@ describe('App', () => {
     expect(screen.getByText('Buy milk')).toBeInTheDocument()
   })
 
-  it('disables batch action buttons when they would have no effect', async () => {
+  it('toggles the mark-all button between "Marcar todas" and "Desmarcar todas"', async () => {
     const user = userEvent.setup()
     render(<App />)
 
@@ -421,13 +421,21 @@ describe('App', () => {
     expect(
       screen.getByRole('button', { name: 'Borrar completadas' }),
     ).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Marcar todas' })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Marcar todas' }))
 
-    expect(screen.getByRole('button', { name: 'Marcar todas' })).toBeDisabled()
+    expect(
+      screen.getByRole('button', { name: 'Desmarcar todas' }),
+    ).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: 'Borrar completadas' }),
     ).not.toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: 'Desmarcar todas' }))
+
+    expect(screen.getByRole('button', { name: 'Marcar todas' })).toBeInTheDocument()
+    expect(screen.getByRole('checkbox')).not.toBeChecked()
   })
 
   it('reorders todos with the move up/down buttons', async () => {
