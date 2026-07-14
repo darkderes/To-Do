@@ -105,6 +105,19 @@
   cursor: default;
 }
 
+.task-list-drag-handle {
+  display: none;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  opacity: 0.6;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 2px 8px;
+  cursor: grab;
+  touch-action: none;
+}
+
 .task-list-rename-input {
   flex: 1;
   padding: 6px 8px;
@@ -521,6 +534,17 @@
     font-weight: 600;
     font-size: 0.85rem;
     cursor: pointer;
+  }
+
+  .task-list-move-up,
+  .task-list-move-down {
+    display: none;
+  }
+
+  .task-list-drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .sidebar-settings {

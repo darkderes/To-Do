@@ -18,7 +18,10 @@ interface PendingDelete {
 }
 
 function App() {
-  const [lists, setLists] = useLocalStorage<TaskList[]>('taskLists', DEFAULT_LISTS)
+  const [lists, setLists] = useLocalStorage<TaskList[]>(
+    'taskLists',
+    DEFAULT_LISTS,
+  )
   const [todos, setTodos] = useLocalStorage<Todo[]>('todos', [])
   const [selectedListId, setSelectedListId] = useLocalStorage<string>(
     'selectedListId',
@@ -101,8 +104,16 @@ function App() {
     )
   }
 
-  function updateTodoMeta(id: string, dueDate: string | undefined, priority: Priority | undefined) {
-    setTodos(todos.map((todo) => (todo.id === id ? { ...todo, dueDate, priority } : todo)))
+  function updateTodoMeta(
+    id: string,
+    dueDate: string | undefined,
+    priority: Priority | undefined,
+  ) {
+    setTodos(
+      todos.map((todo) =>
+        todo.id === id ? { ...todo, dueDate, priority } : todo,
+      ),
+    )
   }
 
   function deleteTodo(id: string) {
@@ -113,7 +124,9 @@ function App() {
   }
 
   function undoDelete(entryId: string) {
-    const entry = undoQueue.entries.find((candidate) => candidate.id === entryId)
+    const entry = undoQueue.entries.find(
+      (candidate) => candidate.id === entryId,
+    )
     if (!entry) return
     const restored = [...todos]
     restored.splice(entry.item.index, 0, entry.item.todo)
@@ -134,7 +147,9 @@ function App() {
     todos
       .filter((todo) => todo.listId === selectedListId && todo.completed)
       .forEach((todo) => {
-        const index = remaining.findIndex((candidate) => candidate.id === todo.id)
+        const index = remaining.findIndex(
+          (candidate) => candidate.id === todo.id,
+        )
         undoQueue.push({ todo, index })
         remaining = remaining.filter((candidate) => candidate.id !== todo.id)
       })
@@ -147,18 +162,34 @@ function App() {
     const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
     if (targetIndex < 0 || targetIndex >= lists.length) return
     const updated = [...lists]
-    ;[updated[currentIndex], updated[targetIndex]] = [updated[targetIndex], updated[currentIndex]]
+    ;[updated[currentIndex], updated[targetIndex]] = [
+      updated[targetIndex],
+      updated[currentIndex],
+    ]
+    setLists(updated)
+  }
+
+  function reorderList(id: string, targetIndex: number) {
+    const currentIndex = lists.findIndex((list) => list.id === id)
+    if (currentIndex === -1 || currentIndex === targetIndex) return
+    const updated = [...lists]
+    const [moved] = updated.splice(currentIndex, 1)
+    updated.splice(targetIndex, 0, moved)
     setLists(updated)
   }
 
   const listTodos = useMemo(
-    () => todos.filter((todo) => (todo.listId ?? DEFAULT_LIST_ID) === selectedListId),
+    () =>
+      todos.filter(
+        (todo) => (todo.listId ?? DEFAULT_LIST_ID) === selectedListId,
+      ),
     [todos, selectedListId],
   )
 
   const visibleTodos = useMemo(() => {
     if (filter === 'active') return listTodos.filter((todo) => !todo.completed)
-    if (filter === 'completed') return listTodos.filter((todo) => todo.completed)
+    if (filter === 'completed')
+      return listTodos.filter((todo) => todo.completed)
     return listTodos
   }, [listTodos, filter])
 
@@ -190,7 +221,11 @@ function App() {
   return (
     <div className="app">
       {isSidebarOpen && (
-        <div className="sidebar-backdrop" onClick={closeSidebar} aria-hidden="true" />
+        <div
+          className="sidebar-backdrop"
+          onClick={closeSidebar}
+          aria-hidden="true"
+        />
       )}
       <TaskListSidebar
         lists={lists}
@@ -203,6 +238,7 @@ function App() {
         onDelete={deleteList}
         onMoveUp={(id) => moveList(id, 'up')}
         onMoveDown={(id) => moveList(id, 'down')}
+        onReorderTo={reorderList}
         onToggleTheme={toggleTheme}
       />
       <main className="app-content">
@@ -226,7 +262,11 @@ function App() {
             type="button"
             className="theme-toggle"
             onClick={toggleTheme}
-            aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            aria-label={
+              theme === 'dark'
+                ? 'Cambiar a modo claro'
+                : 'Cambiar a modo oscuro'
+            }
           >
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
@@ -246,10 +286,18 @@ function App() {
         </div>
         {listTodos.length > 0 && (
           <div className="batch-actions">
-            <button type="button" onClick={markAllComplete} disabled={activeCount === 0}>
+            <button
+              type="button"
+              onClick={markAllComplete}
+              disabled={activeCount === 0}
+            >
               Marcar todas
             </button>
-            <button type="button" onClick={clearCompleted} disabled={completedCount === 0}>
+            <button
+              type="button"
+              onClick={clearCompleted}
+              disabled={completedCount === 0}
+            >
               Borrar completadas
             </button>
           </div>
@@ -265,7 +313,8 @@ function App() {
           onUpdateMeta={updateTodoMeta}
         />
         <p className="count">
-          {activeCount} {activeCount === 1 ? 'tarea pendiente' : 'tareas pendientes'}
+          {activeCount}{' '}
+          {activeCount === 1 ? 'tarea pendiente' : 'tareas pendientes'}
         </p>
       </main>
       <UndoToastStack

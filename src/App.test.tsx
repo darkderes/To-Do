@@ -17,7 +17,10 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
 
     expect(screen.getByText('Buy milk')).toBeInTheDocument()
     expect(screen.getByText('1 tarea pendiente')).toBeInTheDocument()
@@ -27,7 +30,10 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
     await user.click(screen.getByRole('checkbox'))
 
     expect(screen.getByText('Buy milk')).toHaveClass('completed')
@@ -38,7 +44,10 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
     await user.click(screen.getByRole('button', { name: /eliminar/i }))
 
     expect(screen.queryByText('Buy milk')).not.toBeInTheDocument()
@@ -51,14 +60,20 @@ describe('App', () => {
 
     expect(document.documentElement.dataset.theme).toBe('light')
 
-    const toggle = screen.getByRole('button', { name: /cambiar a modo oscuro/i })
+    const toggle = screen.getByRole('button', {
+      name: /cambiar a modo oscuro/i,
+    })
     await user.click(toggle)
 
     expect(document.documentElement.dataset.theme).toBe('dark')
     expect(window.localStorage.getItem('theme')).toBe('dark')
-    expect(screen.getByRole('button', { name: /cambiar a modo claro/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /cambiar a modo claro/i }),
+    ).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /cambiar a modo claro/i }))
+    await user.click(
+      screen.getByRole('button', { name: /cambiar a modo claro/i }),
+    )
 
     expect(document.documentElement.dataset.theme).toBe('light')
     expect(window.localStorage.getItem('theme')).toBe('light')
@@ -69,37 +84,56 @@ describe('App', () => {
     render(<App />)
 
     expect(document.documentElement.dataset.theme).toBe('dark')
-    expect(screen.getByRole('button', { name: /cambiar a modo claro/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /cambiar a modo claro/i }),
+    ).toBeInTheDocument()
   })
 
   it('toggles the theme from the settings section inside the sidebar drawer', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole('button', { name: /listas de tareas, lista actual/i }))
-    await user.click(screen.getByRole('button', { name: /activar modo oscuro/i }))
+    await user.click(
+      screen.getByRole('button', { name: /listas de tareas, lista actual/i }),
+    )
+    await user.click(
+      screen.getByRole('button', { name: /activar modo oscuro/i }),
+    )
 
     expect(document.documentElement.dataset.theme).toBe('dark')
     expect(window.localStorage.getItem('theme')).toBe('dark')
-    expect(screen.getByRole('button', { name: /activar modo claro/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /activar modo claro/i }),
+    ).toBeInTheDocument()
   })
 
   it('shows a default list for new users', () => {
     render(<App />)
 
-    expect(screen.getByRole('button', { name: 'Mis tareas' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Mis tareas' }),
+    ).toBeInTheDocument()
   })
 
   it('creates a new list and only shows tasks added while it is selected', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
 
-    await user.type(screen.getByLabelText(/nombre de la nueva lista/i), 'Work{Enter}')
+    await user.type(
+      screen.getByLabelText(/nombre de la nueva lista/i),
+      'Work{Enter}',
+    )
     expect(screen.getByRole('button', { name: 'Work' })).toBeInTheDocument()
 
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Ship feature{Enter}')
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Ship feature{Enter}',
+    )
 
     expect(screen.getByText('Ship feature')).toBeInTheDocument()
     expect(screen.queryByText('Buy milk')).not.toBeInTheDocument()
@@ -114,7 +148,9 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole('button', { name: /renombrar "mis tareas"/i }))
+    await user.click(
+      screen.getByRole('button', { name: /renombrar "mis tareas"/i }),
+    )
     const input = screen.getByLabelText(/renombrar lista mis tareas/i)
     await user.clear(input)
     await user.type(input, 'Personal{Enter}')
@@ -127,14 +163,26 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/nombre de la nueva lista/i), 'Work{Enter}')
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Ship feature{Enter}')
+    await user.type(
+      screen.getByLabelText(/nombre de la nueva lista/i),
+      'Work{Enter}',
+    )
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Ship feature{Enter}',
+    )
 
-    await user.click(screen.getByRole('button', { name: /eliminar lista "work"/i }))
+    await user.click(
+      screen.getByRole('button', { name: /eliminar lista "work"/i }),
+    )
 
     expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('Work'))
-    expect(screen.queryByRole('button', { name: 'Work' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Mis tareas' })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Work' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Mis tareas' }),
+    ).toBeInTheDocument()
   })
 
   it('keeps a list and its tasks when the deletion is not confirmed', async () => {
@@ -142,10 +190,18 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/nombre de la nueva lista/i), 'Work{Enter}')
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Ship feature{Enter}')
+    await user.type(
+      screen.getByLabelText(/nombre de la nueva lista/i),
+      'Work{Enter}',
+    )
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Ship feature{Enter}',
+    )
 
-    await user.click(screen.getByRole('button', { name: /eliminar lista "work"/i }))
+    await user.click(
+      screen.getByRole('button', { name: /eliminar lista "work"/i }),
+    )
 
     expect(screen.getByRole('button', { name: 'Work' })).toBeInTheDocument()
   })
@@ -154,7 +210,10 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
     await user.click(screen.getByRole('button', { name: /eliminar/i }))
 
     expect(screen.queryByText('Buy milk')).not.toBeInTheDocument()
@@ -168,7 +227,10 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
     await user.click(screen.getByRole('button', { name: /eliminar/i }))
 
     expect(screen.getByRole('button', { name: /deshacer/i })).toHaveFocus()
@@ -178,11 +240,21 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Walk dog{Enter}')
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Walk dog{Enter}',
+    )
 
-    await user.click(screen.getByRole('button', { name: /eliminar "buy milk"/i }))
-    await user.click(screen.getByRole('button', { name: /eliminar "walk dog"/i }))
+    await user.click(
+      screen.getByRole('button', { name: /eliminar "buy milk"/i }),
+    )
+    await user.click(
+      screen.getByRole('button', { name: /eliminar "walk dog"/i }),
+    )
 
     expect(screen.getAllByRole('button', { name: /deshacer/i })).toHaveLength(2)
 
@@ -209,21 +281,27 @@ describe('App', () => {
       vi.advanceTimersByTime(8000)
     })
 
-    expect(screen.getByRole('button', { name: /deshacer/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /deshacer/i }),
+    ).toBeInTheDocument()
 
     fireEvent.mouseLeave(toast)
     act(() => {
       vi.advanceTimersByTime(5100)
     })
 
-    expect(screen.queryByRole('button', { name: /deshacer/i })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /deshacer/i }),
+    ).not.toBeInTheDocument()
   })
 
   it('opens and closes the mobile sidebar drawer, moving focus in and out', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    const toggle = screen.getByRole('button', { name: /listas de tareas, lista actual/i })
+    const toggle = screen.getByRole('button', {
+      name: /listas de tareas, lista actual/i,
+    })
     await user.click(toggle)
 
     expect(screen.getByRole('navigation')).toHaveClass('open')
@@ -239,9 +317,14 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/nombre de la nueva lista/i), 'Work{Enter}')
+    await user.type(
+      screen.getByLabelText(/nombre de la nueva lista/i),
+      'Work{Enter}',
+    )
 
-    const toggle = screen.getByRole('button', { name: /listas de tareas, lista actual/i })
+    const toggle = screen.getByRole('button', {
+      name: /listas de tareas, lista actual/i,
+    })
     await user.click(toggle)
     expect(screen.getByRole('navigation')).toHaveClass('open')
 
@@ -258,11 +341,19 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
     await user.click(screen.getByRole('button', { name: 'completadas' }))
-    expect(screen.getByText(/no hay tareas completadas todavía/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/no hay tareas completadas todavía/i),
+    ).toBeInTheDocument()
 
-    await user.type(screen.getByLabelText(/nombre de la nueva lista/i), 'Work{Enter}')
+    await user.type(
+      screen.getByLabelText(/nombre de la nueva lista/i),
+      'Work{Enter}',
+    )
 
     expect(screen.getByRole('button', { name: 'todas' })).toHaveClass('active')
 
@@ -276,13 +367,21 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Walk dog{Enter}')
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Walk dog{Enter}',
+    )
 
     await user.click(screen.getByRole('button', { name: 'Marcar todas' }))
 
     const checkboxes = screen.getAllByRole('checkbox')
-    expect(checkboxes.every((checkbox) => (checkbox as HTMLInputElement).checked)).toBe(true)
+    expect(
+      checkboxes.every((checkbox) => (checkbox as HTMLInputElement).checked),
+    ).toBe(true)
     expect(screen.getByText('0 tareas pendientes')).toBeInTheDocument()
   })
 
@@ -290,8 +389,14 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Walk dog{Enter}')
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Walk dog{Enter}',
+    )
     await user.click(screen.getAllByRole('checkbox')[0])
 
     await user.click(screen.getByRole('button', { name: 'Borrar completadas' }))
@@ -308,50 +413,78 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
 
-    expect(screen.getByRole('button', { name: 'Borrar completadas' })).toBeDisabled()
+    expect(
+      screen.getByRole('button', { name: 'Borrar completadas' }),
+    ).toBeDisabled()
 
     await user.click(screen.getByRole('button', { name: 'Marcar todas' }))
 
     expect(screen.getByRole('button', { name: 'Marcar todas' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Borrar completadas' })).not.toBeDisabled()
+    expect(
+      screen.getByRole('button', { name: 'Borrar completadas' }),
+    ).not.toBeDisabled()
   })
 
   it('reorders todos with the move up/down buttons', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Walk dog{Enter}')
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Walk dog{Enter}',
+    )
 
     let items = document.querySelectorAll('.todo-item')
     expect(items[0]).toHaveTextContent('Buy milk')
     expect(items[1]).toHaveTextContent('Walk dog')
 
-    await user.click(screen.getByRole('button', { name: /mover "walk dog" arriba/i }))
+    await user.click(
+      screen.getByRole('button', { name: /mover "walk dog" arriba/i }),
+    )
 
     items = document.querySelectorAll('.todo-item')
     expect(items[0]).toHaveTextContent('Walk dog')
     expect(items[1]).toHaveTextContent('Buy milk')
 
-    expect(screen.getByRole('button', { name: /mover "walk dog" arriba/i })).toBeDisabled()
-    expect(screen.getByRole('button', { name: /mover "buy milk" abajo/i })).toBeDisabled()
+    expect(
+      screen.getByRole('button', { name: /mover "walk dog" arriba/i }),
+    ).toBeDisabled()
+    expect(
+      screen.getByRole('button', { name: /mover "buy milk" abajo/i }),
+    ).toBeDisabled()
   })
 
   it('reorders lists with the move up/down buttons', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/nombre de la nueva lista/i), 'Work{Enter}')
+    await user.type(
+      screen.getByLabelText(/nombre de la nueva lista/i),
+      'Work{Enter}',
+    )
 
-    let listButtons = screen.getAllByRole('button', { name: /^(mis tareas|work)$/i })
+    let listButtons = screen.getAllByRole('button', {
+      name: /^(mis tareas|work)$/i,
+    })
     expect(listButtons[0]).toHaveTextContent('Mis tareas')
     expect(listButtons[1]).toHaveTextContent('Work')
 
-    await user.click(screen.getByRole('button', { name: /mover "work" arriba/i }))
+    await user.click(
+      screen.getByRole('button', { name: /mover "work" arriba/i }),
+    )
 
-    listButtons = screen.getAllByRole('button', { name: /^(mis tareas|work)$/i })
+    listButtons = screen.getAllByRole('button', {
+      name: /^(mis tareas|work)$/i,
+    })
     expect(listButtons[0]).toHaveTextContent('Work')
     expect(listButtons[1]).toHaveTextContent('Mis tareas')
   })
@@ -370,7 +503,10 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/nombre de la nueva lista/i), 'Work{Enter}')
+    await user.type(
+      screen.getByLabelText(/nombre de la nueva lista/i),
+      'Work{Enter}',
+    )
 
     const row = document.querySelectorAll('.task-list-item-row')[0]
     fireEvent.pointerDown(row, { clientX: 300, clientY: 50, pointerId: 1 })
@@ -378,12 +514,16 @@ describe('App', () => {
     fireEvent.pointerMove(row, { clientX: 200, clientY: 50, pointerId: 1 })
     fireEvent.pointerUp(row, { clientX: 200, clientY: 50, pointerId: 1 })
 
-    const revealButton = screen.getByRole('button', { name: /quitar lista "mis tareas"/i })
+    const revealButton = screen.getByRole('button', {
+      name: /quitar lista "mis tareas"/i,
+    })
     expect(revealButton).toBeInTheDocument()
 
     await user.click(revealButton)
 
-    expect(screen.queryByRole('button', { name: 'Mis tareas' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Mis tareas' }),
+    ).not.toBeInTheDocument()
   })
 
   it('does not reveal the delete button on a mostly-vertical drag (lets the list scroll)', async () => {
@@ -400,7 +540,10 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/nombre de la nueva lista/i), 'Work{Enter}')
+    await user.type(
+      screen.getByLabelText(/nombre de la nueva lista/i),
+      'Work{Enter}',
+    )
 
     const row = document.querySelectorAll('.task-list-item-row')[0]
     fireEvent.pointerDown(row, { clientX: 300, clientY: 50, pointerId: 1 })
@@ -411,11 +554,69 @@ describe('App', () => {
     expect(row).not.toHaveStyle({ transform: 'translateX(-88px)' })
   })
 
+  it('reorders lists by dragging the mobile drag handle, without touching the swipe row', async () => {
+    vi.spyOn(window, 'matchMedia').mockReturnValue({
+      matches: true,
+      media: '(max-width: 640px)',
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    } as MediaQueryList)
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/nombre de la nueva lista/i),
+      'Work{Enter}',
+    )
+
+    const handles = document.querySelectorAll('.task-list-drag-handle')
+    expect(handles).toHaveLength(2)
+
+    fireEvent.pointerDown(handles[0], {
+      clientX: 20,
+      clientY: 10,
+      pointerId: 1,
+    })
+    fireEvent.pointerMove(handles[0], {
+      clientX: 20,
+      clientY: 80,
+      pointerId: 1,
+    })
+    fireEvent.pointerUp(handles[0], { clientX: 20, clientY: 80, pointerId: 1 })
+
+    const listButtons = screen.getAllByRole('button', {
+      name: /^(mis tareas|work)$/i,
+    })
+    expect(listButtons[0]).toHaveTextContent('Work')
+    expect(listButtons[1]).toHaveTextContent('Mis tareas')
+  })
+
+  it('excludes the drag handle from the accessibility tree and tab order', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/nombre de la nueva lista/i),
+      'Work{Enter}',
+    )
+
+    const handle = document.querySelector('.task-list-drag-handle')
+    expect(handle).toHaveAttribute('aria-hidden', 'true')
+    expect(handle).toHaveAttribute('tabIndex', '-1')
+  })
+
   it('adds a todo with a due date and priority and shows them as badges', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk')
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk',
+    )
     await user.type(screen.getByLabelText(/fecha límite/i), '2026-07-20')
     await user.selectOptions(screen.getByLabelText(/^prioridad/i), 'high')
     await user.click(screen.getByRole('button', { name: 'Añadir' }))
@@ -428,11 +629,22 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
 
-    await user.click(screen.getByRole('button', { name: /editar detalles de "buy milk"/i }))
-    await user.type(screen.getByLabelText(/fecha límite de "buy milk"/i), '2026-08-01')
-    await user.selectOptions(screen.getByLabelText(/prioridad de "buy milk"/i), 'low')
+    await user.click(
+      screen.getByRole('button', { name: /editar detalles de "buy milk"/i }),
+    )
+    await user.type(
+      screen.getByLabelText(/fecha límite de "buy milk"/i),
+      '2026-08-01',
+    )
+    await user.selectOptions(
+      screen.getByLabelText(/prioridad de "buy milk"/i),
+      'low',
+    )
     await user.click(screen.getByRole('button', { name: 'Guardar' }))
 
     expect(screen.getByText(/01\/08\/2026/)).toBeInTheDocument()
@@ -443,9 +655,14 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
     await user.click(screen.getByRole('button', { name: 'completadas' }))
 
-    expect(screen.getByText(/no hay tareas completadas todavía/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/no hay tareas completadas todavía/i),
+    ).toBeInTheDocument()
   })
 })
