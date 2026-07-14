@@ -151,6 +151,8 @@
 .input-icon {
   position: absolute;
   left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
   color: var(--accent);
   font-weight: 700;
   font-size: 1.1rem;
@@ -170,11 +172,12 @@
 
 .add-list input {
   width: 100%;
-  padding: 6px 8px 6px 28px;
+  padding: 10px 8px 10px 30px;
   border: 1px solid var(--border);
   border-radius: 4px;
   background: var(--bg);
   color: var(--text-h);
+  font-size: 1.05rem;
 }
 
 .add-list input::placeholder {
@@ -678,8 +681,9 @@
     width: 85vw;
     max-width: 320px;
     height: 100vh;
+    box-sizing: border-box;
     margin: 0;
-    padding: 20px 16px;
+    padding: 20px 16px 36px;
     background: var(--bg);
     border-right: 1px solid var(--border);
     box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15);
