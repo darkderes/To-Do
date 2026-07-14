@@ -207,6 +207,136 @@ describe('App', () => {
     expect(screen.queryByRole('button', { name: /deshacer/i })).not.toBeInTheDocument()
   })
 
+  it('resets the filter to "todas" when switching lists', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+    await user.click(screen.getByRole('button', { name: 'completadas' }))
+    expect(screen.getByText(/no hay tareas completadas todavía/i)).toBeInTheDocument()
+
+    await user.type(screen.getByLabelText(/nombre de la nueva lista/i), 'Work{Enter}')
+
+    expect(screen.getByRole('button', { name: 'todas' })).toHaveClass('active')
+
+    await user.click(screen.getByRole('button', { name: 'Mis tareas' }))
+
+    expect(screen.getByRole('button', { name: 'todas' })).toHaveClass('active')
+    expect(screen.getByText('Buy milk')).toBeInTheDocument()
+  })
+
+  it('marks all todos in the current list as complete', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Walk dog{Enter}')
+
+    await user.click(screen.getByRole('button', { name: 'Marcar todas' }))
+
+    const checkboxes = screen.getAllByRole('checkbox')
+    expect(checkboxes.every((checkbox) => (checkbox as HTMLInputElement).checked)).toBe(true)
+    expect(screen.getByText('0 tareas pendientes')).toBeInTheDocument()
+  })
+
+  it('clears completed todos in the current list with per-task undo', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Walk dog{Enter}')
+    await user.click(screen.getAllByRole('checkbox')[0])
+
+    await user.click(screen.getByRole('button', { name: 'Borrar completadas' }))
+
+    expect(screen.queryByText('Buy milk')).not.toBeInTheDocument()
+    expect(screen.getByText('Walk dog')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /deshacer/i }))
+
+    expect(screen.getByText('Buy milk')).toBeInTheDocument()
+  })
+
+  it('disables batch action buttons when they would have no effect', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+
+    expect(screen.getByRole('button', { name: 'Borrar completadas' })).toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: 'Marcar todas' }))
+
+    expect(screen.getByRole('button', { name: 'Marcar todas' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Borrar completadas' })).not.toBeDisabled()
+  })
+
+  it('reorders todos with the move up/down buttons', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Walk dog{Enter}')
+
+    let items = document.querySelectorAll('.todo-item')
+    expect(items[0]).toHaveTextContent('Buy milk')
+    expect(items[1]).toHaveTextContent('Walk dog')
+
+    await user.click(screen.getByRole('button', { name: /mover "walk dog" arriba/i }))
+
+    items = document.querySelectorAll('.todo-item')
+    expect(items[0]).toHaveTextContent('Walk dog')
+    expect(items[1]).toHaveTextContent('Buy milk')
+
+    expect(screen.getByRole('button', { name: /mover "walk dog" arriba/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /mover "buy milk" abajo/i })).toBeDisabled()
+  })
+
+  it('reorders lists with the move up/down buttons', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/nombre de la nueva lista/i), 'Work{Enter}')
+
+    let listButtons = screen.getAllByRole('button', { name: /^(mis tareas|work)$/i })
+    expect(listButtons[0]).toHaveTextContent('Mis tareas')
+    expect(listButtons[1]).toHaveTextContent('Work')
+
+    await user.click(screen.getByRole('button', { name: /mover "work" arriba/i }))
+
+    listButtons = screen.getAllByRole('button', { name: /^(mis tareas|work)$/i })
+    expect(listButtons[0]).toHaveTextContent('Work')
+    expect(listButtons[1]).toHaveTextContent('Mis tareas')
+  })
+
+  it('adds a todo with a due date and priority and shows them as badges', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk')
+    await user.type(screen.getByLabelText(/fecha límite/i), '2026-07-20')
+    await user.selectOptions(screen.getByLabelText(/^prioridad/i), 'high')
+    await user.click(screen.getByRole('button', { name: 'Añadir' }))
+
+    expect(screen.getByText(/20\/07\/2026/)).toBeInTheDocument()
+    expect(document.querySelector('.priority-badge')).toHaveTextContent('Alta')
+  })
+
+  it('edits the due date and priority of an existing todo', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+
+    await user.click(screen.getByRole('button', { name: /editar detalles de "buy milk"/i }))
+    await user.type(screen.getByLabelText(/fecha límite de "buy milk"/i), '2026-08-01')
+    await user.selectOptions(screen.getByLabelText(/prioridad de "buy milk"/i), 'low')
+    await user.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    expect(screen.getByText(/01\/08\/2026/)).toBeInTheDocument()
+    expect(document.querySelector('.priority-badge')).toHaveTextContent('Baja')
+  })
+
   it('shows a targeted message when a filter hides existing tasks', async () => {
     const user = userEvent.setup()
     render(<App />)

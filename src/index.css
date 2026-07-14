@@ -6,6 +6,13 @@
   --accent: #9328db;
   --on-accent: var(--bg);
 
+  --priority-low-bg: #dcfce7;
+  --priority-low-text: #166534;
+  --priority-medium-bg: #fef3c7;
+  --priority-medium-text: #92400e;
+  --priority-high-bg: #fee2e2;
+  --priority-high-text: #991b1b;
+
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 
   font: 16px/145% var(--sans);
@@ -26,6 +33,13 @@
   --border: #2e303a;
   --accent: #c084fc;
   --on-accent: var(--bg);
+
+  --priority-low-bg: #14532d;
+  --priority-low-text: #bbf7d0;
+  --priority-medium-bg: #78350f;
+  --priority-medium-text: #fde68a;
+  --priority-high-bg: #7f1d1d;
+  --priority-high-text: #fecaca;
 }
 
 body {

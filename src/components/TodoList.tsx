@@ -1,4 +1,4 @@
-import type { Filter, Todo } from '../types'
+import type { Filter, Priority, Todo } from '../types'
 import { TodoItem } from './TodoItem'
 
 interface TodoListProps {
@@ -7,6 +7,9 @@ interface TodoListProps {
   hasAnyTodos: boolean
   onToggle: (id: string) => void
   onDelete: (id: string) => void
+  onMoveUp: (id: string) => void
+  onMoveDown: (id: string) => void
+  onUpdateMeta: (id: string, dueDate: string | undefined, priority: Priority | undefined) => void
 }
 
 const EMPTY_MESSAGES: Record<Filter, string> = {
@@ -15,7 +18,16 @@ const EMPTY_MESSAGES: Record<Filter, string> = {
   completed: 'No hay tareas completadas todavía.',
 }
 
-export function TodoList({ todos, filter, hasAnyTodos, onToggle, onDelete }: TodoListProps) {
+export function TodoList({
+  todos,
+  filter,
+  hasAnyTodos,
+  onToggle,
+  onDelete,
+  onMoveUp,
+  onMoveDown,
+  onUpdateMeta,
+}: TodoListProps) {
   if (todos.length === 0) {
     const message = hasAnyTodos ? EMPTY_MESSAGES[filter] : EMPTY_MESSAGES.all
     return <p className="empty-state">{message}</p>
@@ -23,12 +35,17 @@ export function TodoList({ todos, filter, hasAnyTodos, onToggle, onDelete }: Tod
 
   return (
     <ul className="todo-list">
-      {todos.map((todo) => (
+      {todos.map((todo, index) => (
         <TodoItem
           key={todo.id}
           todo={todo}
+          canMoveUp={index > 0}
+          canMoveDown={index < todos.length - 1}
           onToggle={onToggle}
           onDelete={onDelete}
+          onMoveUp={onMoveUp}
+          onMoveDown={onMoveDown}
+          onUpdateMeta={onUpdateMeta}
         />
       ))}
     </ul>

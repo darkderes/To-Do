@@ -9,6 +9,8 @@ interface TaskListSidebarProps {
   onAdd: (name: string) => void
   onRename: (id: string, name: string) => void
   onDelete: (id: string) => void
+  onMoveUp: (id: string) => void
+  onMoveDown: (id: string) => void
 }
 
 export function TaskListSidebar({
@@ -18,6 +20,8 @@ export function TaskListSidebar({
   onAdd,
   onRename,
   onDelete,
+  onMoveUp,
+  onMoveDown,
 }: TaskListSidebarProps) {
   const [newListName, setNewListName] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -50,7 +54,7 @@ export function TaskListSidebar({
   return (
     <nav className="task-list-sidebar" aria-label="Listas de tareas">
       <ul className="task-list-nav">
-        {lists.map((list) => (
+        {lists.map((list, index) => (
           <li key={list.id} className={list.id === selectedListId ? 'active' : ''}>
             {editingId === list.id ? (
               <input
@@ -71,6 +75,24 @@ export function TaskListSidebar({
                   onClick={() => onSelect(list.id)}
                 >
                   {list.name}
+                </button>
+                <button
+                  type="button"
+                  className="task-list-action"
+                  aria-label={`Mover "${list.name}" arriba`}
+                  disabled={index === 0}
+                  onClick={() => onMoveUp(list.id)}
+                >
+                  ▲
+                </button>
+                <button
+                  type="button"
+                  className="task-list-action"
+                  aria-label={`Mover "${list.name}" abajo`}
+                  disabled={index === lists.length - 1}
+                  onClick={() => onMoveDown(list.id)}
+                >
+                  ▼
                 </button>
                 <button
                   type="button"

@@ -6,7 +6,7 @@ import { UndoToastStack } from './components/UndoToastStack'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { useTheme } from './hooks/useTheme'
 import { useUndoQueue } from './hooks/useUndoQueue'
-import type { Filter, TaskList, Todo } from './types'
+import type { Filter, Priority, TaskList, Todo } from './types'
 import './App.css'
 
 const DEFAULT_LIST_ID = 'default'
@@ -28,10 +28,15 @@ function App() {
   const undoQueue = useUndoQueue<PendingDelete>()
   const { theme, toggleTheme } = useTheme()
 
+  function selectList(id: string) {
+    setSelectedListId(id)
+    setFilter('all')
+  }
+
   function addList(name: string) {
     const newList: TaskList = { id: crypto.randomUUID(), name }
     setLists([...lists, newList])
-    setSelectedListId(newList.id)
+    selectList(newList.id)
   }
 
   function renameList(id: string, name: string) {
@@ -53,14 +58,21 @@ function App() {
     setLists(remaining)
     setTodos(todos.filter((todo) => todo.listId !== id))
     if (selectedListId === id) {
-      setSelectedListId(remaining[0].id)
+      selectList(remaining[0].id)
     }
   }
 
-  function addTodo(text: string) {
+  function addTodo(text: string, dueDate?: string, priority?: Priority) {
     setTodos([
       ...todos,
-      { id: crypto.randomUUID(), text, completed: false, listId: selectedListId },
+      {
+        id: crypto.randomUUID(),
+        text,
+        completed: false,
+        listId: selectedListId,
+        dueDate,
+        priority,
+      },
     ])
   }
 
@@ -70,6 +82,10 @@ function App() {
         todo.id === id ? { ...todo, completed: !todo.completed } : todo,
       ),
     )
+  }
+
+  function updateTodoMeta(id: string, dueDate: string | undefined, priority: Priority | undefined) {
+    setTodos(todos.map((todo) => (todo.id === id ? { ...todo, dueDate, priority } : todo)))
   }
 
   function deleteTodo(id: string) {
@@ -88,6 +104,36 @@ function App() {
     undoQueue.dismiss(entryId)
   }
 
+  function markAllComplete() {
+    setTodos(
+      todos.map((todo) =>
+        todo.listId === selectedListId ? { ...todo, completed: true } : todo,
+      ),
+    )
+  }
+
+  function clearCompleted() {
+    let remaining = todos
+    todos
+      .filter((todo) => todo.listId === selectedListId && todo.completed)
+      .forEach((todo) => {
+        const index = remaining.findIndex((candidate) => candidate.id === todo.id)
+        undoQueue.push({ todo, index })
+        remaining = remaining.filter((candidate) => candidate.id !== todo.id)
+      })
+    setTodos(remaining)
+  }
+
+  function moveList(id: string, direction: 'up' | 'down') {
+    const currentIndex = lists.findIndex((list) => list.id === id)
+    if (currentIndex === -1) return
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+    if (targetIndex < 0 || targetIndex >= lists.length) return
+    const updated = [...lists]
+    ;[updated[currentIndex], updated[targetIndex]] = [updated[targetIndex], updated[currentIndex]]
+    setLists(updated)
+  }
+
   const listTodos = useMemo(
     () => todos.filter((todo) => (todo.listId ?? DEFAULT_LIST_ID) === selectedListId),
     [todos, selectedListId],
@@ -100,6 +146,21 @@ function App() {
   }, [listTodos, filter])
 
   const activeCount = listTodos.filter((todo) => !todo.completed).length
+  const completedCount = listTodos.length - activeCount
+
+  function moveTodo(id: string, direction: 'up' | 'down') {
+    const currentIndex = visibleTodos.findIndex((todo) => todo.id === id)
+    if (currentIndex === -1) return
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+    if (targetIndex < 0 || targetIndex >= visibleTodos.length) return
+    const a = visibleTodos[currentIndex]
+    const b = visibleTodos[targetIndex]
+    const aIndex = todos.findIndex((todo) => todo.id === a.id)
+    const bIndex = todos.findIndex((todo) => todo.id === b.id)
+    const updated = [...todos]
+    ;[updated[aIndex], updated[bIndex]] = [updated[bIndex], updated[aIndex]]
+    setTodos(updated)
+  }
 
   const filterLabels: Record<Filter, string> = {
     all: 'todas',
@@ -112,10 +173,12 @@ function App() {
       <TaskListSidebar
         lists={lists}
         selectedListId={selectedListId}
-        onSelect={setSelectedListId}
+        onSelect={selectList}
         onAdd={addList}
         onRename={renameList}
         onDelete={deleteList}
+        onMoveUp={(id) => moveList(id, 'up')}
+        onMoveDown={(id) => moveList(id, 'down')}
       />
       <main className="app-content">
         <div className="app-header">
@@ -142,12 +205,25 @@ function App() {
             </button>
           ))}
         </div>
+        {listTodos.length > 0 && (
+          <div className="batch-actions">
+            <button type="button" onClick={markAllComplete} disabled={activeCount === 0}>
+              Marcar todas
+            </button>
+            <button type="button" onClick={clearCompleted} disabled={completedCount === 0}>
+              Borrar completadas
+            </button>
+          </div>
+        )}
         <TodoList
           todos={visibleTodos}
           filter={filter}
           hasAnyTodos={listTodos.length > 0}
           onToggle={toggleTodo}
           onDelete={deleteTodo}
+          onMoveUp={(id) => moveTodo(id, 'up')}
+          onMoveDown={(id) => moveTodo(id, 'down')}
+          onUpdateMeta={updateTodoMeta}
         />
         <p className="count">
           {activeCount} {activeCount === 1 ? 'tarea pendiente' : 'tareas pendientes'}
