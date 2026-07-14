@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AddTodo } from './components/AddTodo'
 import { TodoList } from './components/TodoList'
 import { TaskListSidebar } from './components/TaskListSidebar'
@@ -25,12 +25,29 @@ function App() {
     DEFAULT_LIST_ID,
   )
   const [filter, setFilter] = useLocalStorage<Filter>('filter', 'all')
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const sidebarToggleRef = useRef<HTMLButtonElement>(null)
   const undoQueue = useUndoQueue<PendingDelete>()
   const { theme, toggleTheme } = useTheme()
+
+  function closeSidebar() {
+    setIsSidebarOpen(false)
+    sidebarToggleRef.current?.focus()
+  }
+
+  useEffect(() => {
+    if (!isSidebarOpen) return
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') closeSidebar()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isSidebarOpen])
 
   function selectList(id: string) {
     setSelectedListId(id)
     setFilter('all')
+    closeSidebar()
   }
 
   function addList(name: string) {
@@ -168,11 +185,29 @@ function App() {
     completed: 'completadas',
   }
 
+  const selectedList = lists.find((list) => list.id === selectedListId)
+
   return (
     <div className="app">
+      <button
+        type="button"
+        className="sidebar-toggle"
+        ref={sidebarToggleRef}
+        aria-expanded={isSidebarOpen}
+        aria-controls="task-list-sidebar"
+        aria-label={`Listas de tareas, lista actual: ${selectedList?.name ?? ''}`}
+        onClick={() => setIsSidebarOpen((open) => !open)}
+      >
+        <span aria-hidden="true">☰</span>{' '}
+        <span aria-hidden="true">{selectedList?.name ?? 'Listas'}</span>
+      </button>
+      {isSidebarOpen && (
+        <div className="sidebar-backdrop" onClick={closeSidebar} aria-hidden="true" />
+      )}
       <TaskListSidebar
         lists={lists}
         selectedListId={selectedListId}
+        isOpen={isSidebarOpen}
         onSelect={selectList}
         onAdd={addList}
         onRename={renameList}

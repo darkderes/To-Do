@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent } from 'react'
 import type { TaskList } from '../types'
 
 interface TaskListSidebarProps {
   lists: TaskList[]
   selectedListId: string
+  isOpen: boolean
   onSelect: (id: string) => void
   onAdd: (name: string) => void
   onRename: (id: string, name: string) => void
@@ -16,6 +17,7 @@ interface TaskListSidebarProps {
 export function TaskListSidebar({
   lists,
   selectedListId,
+  isOpen,
   onSelect,
   onAdd,
   onRename,
@@ -26,6 +28,12 @@ export function TaskListSidebar({
   const [newListName, setNewListName] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
+  const navRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    if (!isOpen) return
+    navRef.current?.querySelector<HTMLButtonElement>('.task-list-button')?.focus()
+  }, [isOpen])
 
   function handleAddSubmit(event: FormEvent) {
     event.preventDefault()
@@ -52,7 +60,12 @@ export function TaskListSidebar({
   }
 
   return (
-    <nav className="task-list-sidebar" aria-label="Listas de tareas">
+    <nav
+      id="task-list-sidebar"
+      ref={navRef}
+      className={`task-list-sidebar${isOpen ? ' open' : ''}`}
+      aria-label="Listas de tareas"
+    >
       <ul className="task-list-nav">
         {lists.map((list, index) => (
           <li key={list.id} className={list.id === selectedListId ? 'active' : ''}>

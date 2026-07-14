@@ -207,6 +207,41 @@ describe('App', () => {
     expect(screen.queryByRole('button', { name: /deshacer/i })).not.toBeInTheDocument()
   })
 
+  it('opens and closes the mobile sidebar drawer, moving focus in and out', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const toggle = screen.getByRole('button', { name: /listas de tareas, lista actual/i })
+    await user.click(toggle)
+
+    expect(screen.getByRole('navigation')).toHaveClass('open')
+    expect(screen.getByRole('button', { name: 'Mis tareas' })).toHaveFocus()
+
+    await user.keyboard('{Escape}')
+
+    expect(screen.getByRole('navigation')).not.toHaveClass('open')
+    expect(toggle).toHaveFocus()
+  })
+
+  it('closes the sidebar drawer via the backdrop and when a list is selected', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/nombre de la nueva lista/i), 'Work{Enter}')
+
+    const toggle = screen.getByRole('button', { name: /listas de tareas, lista actual/i })
+    await user.click(toggle)
+    expect(screen.getByRole('navigation')).toHaveClass('open')
+
+    await user.click(screen.getByRole('button', { name: 'Mis tareas' }))
+    expect(screen.getByRole('navigation')).not.toHaveClass('open')
+
+    await user.click(toggle)
+    expect(document.querySelector('.sidebar-backdrop')).toBeInTheDocument()
+    await user.click(document.querySelector('.sidebar-backdrop')!)
+    expect(screen.getByRole('navigation')).not.toHaveClass('open')
+  })
+
   it('resets the filter to "todas" when switching lists', async () => {
     const user = userEvent.setup()
     render(<App />)
