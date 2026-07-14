@@ -7,7 +7,7 @@ import { useLocalStorage } from './hooks/useLocalStorage'
 import { useTheme } from './hooks/useTheme'
 import { useUndoQueue } from './hooks/useUndoQueue'
 import { MY_DAY_ID, getTodayString } from './types'
-import type { Filter, Priority, TaskList, Todo } from './types'
+import type { Priority, TaskList, Todo } from './types'
 import './App.css'
 
 const DEFAULT_LIST_ID = 'default'
@@ -32,8 +32,8 @@ function App() {
     'lastRealListId',
     DEFAULT_LIST_ID,
   )
-  const [filter, setFilter] = useLocalStorage<Filter>('filter', 'all')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [showCompleted, setShowCompleted] = useState(false)
   const sidebarToggleRef = useRef<HTMLButtonElement>(null)
   const undoQueue = useUndoQueue<PendingDelete>()
   const { theme, toggleTheme } = useTheme()
@@ -57,7 +57,6 @@ function App() {
   function selectList(id: string) {
     setSelectedListId(id)
     if (id !== MY_DAY_ID) setLastRealListId(id)
-    setFilter('all')
     closeSidebar()
   }
 
@@ -211,23 +210,29 @@ function App() {
     [todos, selectedListId, isMyDay, today],
   )
 
-  const visibleTodos = useMemo(() => {
-    if (filter === 'active') return listTodos.filter((todo) => !todo.completed)
-    if (filter === 'completed')
-      return listTodos.filter((todo) => todo.completed)
-    return listTodos
-  }, [listTodos, filter])
+  const activeTodos = useMemo(
+    () => listTodos.filter((todo) => !todo.completed),
+    [listTodos],
+  )
+  const completedTodos = useMemo(
+    () => listTodos.filter((todo) => todo.completed),
+    [listTodos],
+  )
 
-  const activeCount = listTodos.filter((todo) => !todo.completed).length
-  const completedCount = listTodos.length - activeCount
+  const activeCount = activeTodos.length
+  const completedCount = completedTodos.length
 
-  function moveTodo(id: string, direction: 'up' | 'down') {
-    const currentIndex = visibleTodos.findIndex((todo) => todo.id === id)
+  function moveWithinSubset(
+    subset: Todo[],
+    id: string,
+    direction: 'up' | 'down',
+  ) {
+    const currentIndex = subset.findIndex((todo) => todo.id === id)
     if (currentIndex === -1) return
     const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
-    if (targetIndex < 0 || targetIndex >= visibleTodos.length) return
-    const a = visibleTodos[currentIndex]
-    const b = visibleTodos[targetIndex]
+    if (targetIndex < 0 || targetIndex >= subset.length) return
+    const a = subset[currentIndex]
+    const b = subset[targetIndex]
     const aIndex = todos.findIndex((todo) => todo.id === a.id)
     const bIndex = todos.findIndex((todo) => todo.id === b.id)
     const updated = [...todos]
@@ -235,14 +240,10 @@ function App() {
     setTodos(updated)
   }
 
-  function reorderTodo(id: string, targetVisibleIndex: number) {
-    const currentVisibleIndex = visibleTodos.findIndex((todo) => todo.id === id)
-    if (
-      currentVisibleIndex === -1 ||
-      currentVisibleIndex === targetVisibleIndex
-    )
-      return
-    const targetTodo = visibleTodos[targetVisibleIndex]
+  function reorderWithinSubset(subset: Todo[], id: string, targetIndex: number) {
+    const currentIndex = subset.findIndex((todo) => todo.id === id)
+    if (currentIndex === -1 || currentIndex === targetIndex) return
+    const targetTodo = subset[targetIndex]
     const dragged = todos.find((todo) => todo.id === id)
     if (!dragged) return
     const withoutDragged = todos.filter((todo) => todo.id !== id)
@@ -250,22 +251,21 @@ function App() {
       (todo) => todo.id === targetTodo.id,
     )
     const insertIndex =
-      currentVisibleIndex < targetVisibleIndex
-        ? targetFullIndex + 1
-        : targetFullIndex
+      currentIndex < targetIndex ? targetFullIndex + 1 : targetFullIndex
     const updated = [...withoutDragged]
     updated.splice(insertIndex, 0, dragged)
     setTodos(updated)
   }
 
-  const filterLabels: Record<Filter, string> = {
-    all: 'todas',
-    active: 'activas',
-    completed: 'completadas',
-  }
-
   const selectedList = lists.find((list) => list.id === selectedListId)
   const selectedListName = isMyDay ? 'Mi día' : (selectedList?.name ?? '')
+
+  const activeEmptyMessage =
+    listTodos.length === 0
+      ? isMyDay
+        ? 'Nada marcado para hoy — usa ☀️ en cualquier tarea.'
+        : 'Aún no hay tareas — añade una abajo.'
+      : 'No hay tareas activas — ¡todo al día!'
 
   return (
     <div className="app">
@@ -320,19 +320,6 @@ function App() {
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
         </div>
-        <AddTodo onAdd={addTodo} />
-        <div className="filters">
-          {(['all', 'active', 'completed'] as const).map((option) => (
-            <button
-              key={option}
-              type="button"
-              className={filter === option ? 'active' : ''}
-              onClick={() => setFilter(option)}
-            >
-              {filterLabels[option]}
-            </button>
-          ))}
-        </div>
         {listTodos.length > 0 && (
           <div className="batch-actions">
             <button type="button" onClick={toggleAllComplete}>
@@ -348,25 +335,55 @@ function App() {
           </div>
         )}
         <TodoList
-          todos={visibleTodos}
-          filter={filter}
-          hasAnyTodos={listTodos.length > 0}
-          emptyAllMessage={
-            isMyDay ? 'Nada marcado para hoy — usa ☀️ en cualquier tarea.' : undefined
-          }
+          todos={activeTodos}
+          emptyMessage={activeEmptyMessage}
           onToggle={toggleTodo}
           onDelete={deleteTodo}
-          onMoveUp={(id) => moveTodo(id, 'up')}
-          onMoveDown={(id) => moveTodo(id, 'down')}
-          onReorderTo={reorderTodo}
+          onMoveUp={(id) => moveWithinSubset(activeTodos, id, 'up')}
+          onMoveDown={(id) => moveWithinSubset(activeTodos, id, 'down')}
+          onReorderTo={(id, targetIndex) =>
+            reorderWithinSubset(activeTodos, id, targetIndex)
+          }
           onUpdateMeta={updateTodoMeta}
           onToggleMyDay={toggleMyDay}
           today={today}
         />
+        {completedTodos.length > 0 && (
+          <div className="completed-section">
+            <button
+              type="button"
+              className="completed-toggle"
+              aria-expanded={showCompleted}
+              onClick={() => setShowCompleted((open) => !open)}
+            >
+              <span>Completadas ({completedTodos.length})</span>
+              <span aria-hidden="true">{showCompleted ? '▲' : '▼'}</span>
+            </button>
+            {showCompleted && (
+              <TodoList
+                todos={completedTodos}
+                emptyMessage="No hay tareas completadas."
+                onToggle={toggleTodo}
+                onDelete={deleteTodo}
+                onMoveUp={(id) => moveWithinSubset(completedTodos, id, 'up')}
+                onMoveDown={(id) =>
+                  moveWithinSubset(completedTodos, id, 'down')
+                }
+                onReorderTo={(id, targetIndex) =>
+                  reorderWithinSubset(completedTodos, id, targetIndex)
+                }
+                onUpdateMeta={updateTodoMeta}
+                onToggleMyDay={toggleMyDay}
+                today={today}
+              />
+            )}
+          </div>
+        )}
         <p className="count">
           {activeCount}{' '}
           {activeCount === 1 ? 'tarea pendiente' : 'tareas pendientes'}
         </p>
+        <AddTodo onAdd={addTodo} />
       </main>
       <UndoToastStack
         entries={undoQueue.entries}

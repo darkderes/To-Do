@@ -3,7 +3,7 @@ import type {
   MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
 } from 'react'
-import type { Filter, Priority, Todo } from '../types'
+import type { Priority, Todo } from '../types'
 import { TodoItem } from './TodoItem'
 
 const REVEAL_WIDTH = 88
@@ -34,9 +34,7 @@ interface ReorderDrag {
 
 interface TodoListProps {
   todos: Todo[]
-  filter: Filter
-  hasAnyTodos: boolean
-  emptyAllMessage?: string
+  emptyMessage: string
   onToggle: (id: string) => void
   onDelete: (id: string) => void
   onMoveUp: (id: string) => void
@@ -51,17 +49,9 @@ interface TodoListProps {
   today: string
 }
 
-const EMPTY_MESSAGES: Record<Filter, string> = {
-  all: 'Aún no hay tareas — añade una arriba.',
-  active: 'No hay tareas activas — ¡todo al día!',
-  completed: 'No hay tareas completadas todavía.',
-}
-
 export function TodoList({
   todos,
-  filter,
-  hasAnyTodos,
-  emptyAllMessage,
+  emptyMessage,
   onToggle,
   onDelete,
   onMoveUp,
@@ -203,10 +193,7 @@ export function TodoList({
   }
 
   if (todos.length === 0) {
-    const message = hasAnyTodos
-      ? EMPTY_MESSAGES[filter]
-      : (emptyAllMessage ?? EMPTY_MESSAGES.all)
-    return <p className="empty-state">{message}</p>
+    return <p className="empty-state">{emptyMessage}</p>
   }
 
   return (

@@ -36,8 +36,11 @@ describe('App', () => {
     )
     await user.click(screen.getByRole('checkbox'))
 
-    expect(screen.getByText('Buy milk')).toHaveClass('completed')
     expect(screen.getByText('0 tareas pendientes')).toBeInTheDocument()
+    expect(screen.queryByText('Buy milk')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /completadas \(1\)/i }))
+    expect(screen.getByText('Buy milk')).toHaveClass('completed')
   })
 
   it('deletes a todo', async () => {
@@ -337,7 +340,7 @@ describe('App', () => {
     expect(screen.getByRole('navigation')).not.toHaveClass('open')
   })
 
-  it('resets the filter to "todas" when switching lists', async () => {
+  it('hides completed tasks in a collapsible section, closed by default', async () => {
     const user = userEvent.setup()
     render(<App />)
 
@@ -345,22 +348,18 @@ describe('App', () => {
       screen.getByLabelText(/texto de la nueva tarea/i),
       'Buy milk{Enter}',
     )
-    await user.click(screen.getByRole('button', { name: 'completadas' }))
-    expect(
-      screen.getByText(/no hay tareas completadas todavía/i),
-    ).toBeInTheDocument()
+    await user.click(screen.getByRole('checkbox'))
 
-    await user.type(
-      screen.getByLabelText(/nombre de la nueva lista/i),
-      'Work{Enter}',
-    )
+    expect(screen.queryByText('Buy milk')).not.toBeInTheDocument()
+    const toggle = screen.getByRole('button', { name: /completadas \(1\)/i })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
 
-    expect(screen.getByRole('button', { name: 'todas' })).toHaveClass('active')
-
-    await user.click(screen.getByRole('button', { name: 'Mis tareas' }))
-
-    expect(screen.getByRole('button', { name: 'todas' })).toHaveClass('active')
+    await user.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
     expect(screen.getByText('Buy milk')).toBeInTheDocument()
+
+    await user.click(toggle)
+    expect(screen.queryByText('Buy milk')).not.toBeInTheDocument()
   })
 
   it('marks all todos in the current list as complete', async () => {
@@ -377,6 +376,7 @@ describe('App', () => {
     )
 
     await user.click(screen.getByRole('button', { name: 'Marcar todas' }))
+    await user.click(screen.getByRole('button', { name: /completadas \(2\)/i }))
 
     const checkboxes = screen.getAllByRole('checkbox')
     expect(
@@ -406,6 +406,7 @@ describe('App', () => {
 
     await user.click(screen.getByRole('button', { name: /deshacer/i }))
 
+    await user.click(screen.getByRole('button', { name: /completadas \(1\)/i }))
     expect(screen.getByText('Buy milk')).toBeInTheDocument()
   })
 
@@ -728,6 +729,14 @@ describe('App', () => {
     ).toBeInTheDocument()
   })
 
+  it('shows the add-task input in a fixed bar at the bottom with the "Agregar tarea" placeholder', () => {
+    render(<App />)
+
+    const input = screen.getByLabelText(/texto de la nueva tarea/i)
+    expect(input).toHaveAttribute('placeholder', 'Agregar tarea')
+    expect(input.closest('.add-todo-bar')).toBeInTheDocument()
+  })
+
   it('edits the due date and priority of an existing todo', async () => {
     const user = userEvent.setup()
     render(<App />)
@@ -754,7 +763,7 @@ describe('App', () => {
     expect(document.querySelector('.priority-badge')).toHaveTextContent('Baja')
   })
 
-  it('shows a targeted message when a filter hides existing tasks', async () => {
+  it('shows a targeted message when every task is completed', async () => {
     const user = userEvent.setup()
     render(<App />)
 
@@ -762,10 +771,10 @@ describe('App', () => {
       screen.getByLabelText(/texto de la nueva tarea/i),
       'Buy milk{Enter}',
     )
-    await user.click(screen.getByRole('button', { name: 'completadas' }))
+    await user.click(screen.getByRole('checkbox'))
 
     expect(
-      screen.getByText(/no hay tareas completadas todavía/i),
+      screen.getByText(/no hay tareas activas.*todo al día/i),
     ).toBeInTheDocument()
   })
 

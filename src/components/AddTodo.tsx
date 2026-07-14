@@ -17,15 +17,17 @@ export function AddTodo({ onAdd }: AddTodoProps) {
   }
 
   return (
-    <form className="add-todo" onSubmit={handleSubmit}>
-      <input
-        type="text"
-        value={text}
-        onChange={(event) => setText(event.target.value)}
-        placeholder="¿Qué hay que hacer?"
-        aria-label="Texto de la nueva tarea"
-      />
-      <button type="submit">Añadir</button>
-    </form>
+    <div className="add-todo-bar">
+      <form className="add-todo" onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          placeholder="Agregar tarea"
+          aria-label="Texto de la nueva tarea"
+        />
+        <button type="submit">Añadir</button>
+      </form>
+    </div>
   )
 }
