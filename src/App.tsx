@@ -275,10 +275,7 @@ function App() {
           >
             <span aria-hidden="true">☰</span>
           </button>
-          <h1>
-            <span className="title-app">Tareas</span>
-            <span className="title-list">{selectedListName}</span>
-          </h1>
+          <h1>{selectedListName}</h1>
           <button
             type="button"
             className="theme-toggle"

@@ -37,10 +37,6 @@
   border-color: var(--accent);
 }
 
-.title-list {
-  display: none;
-}
-
 .sidebar-backdrop {
   display: none;
 }
@@ -587,14 +583,6 @@
   .app-header h1 {
     flex: 1;
     text-align: center;
-  }
-
-  .title-app {
-    display: none;
-  }
-
-  .title-list {
-    display: inline;
   }
 
   .sidebar-toggle {
