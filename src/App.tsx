@@ -196,12 +196,14 @@ function App() {
         lists={lists}
         selectedListId={selectedListId}
         isOpen={isSidebarOpen}
+        theme={theme}
         onSelect={selectList}
         onAdd={addList}
         onRename={renameList}
         onDelete={deleteList}
         onMoveUp={(id) => moveList(id, 'up')}
         onMoveDown={(id) => moveList(id, 'down')}
+        onToggleTheme={toggleTheme}
       />
       <main className="app-content">
         <div className="app-header">

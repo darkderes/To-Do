@@ -122,6 +122,40 @@
   cursor: pointer;
 }
 
+.sidebar-settings {
+  display: none;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.sidebar-settings-heading {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text);
+}
+
+.sidebar-settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-h);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.sidebar-settings-item:hover {
+  border-color: var(--accent);
+}
+
 .app-header {
   display: flex;
   align-items: center;
@@ -441,6 +475,18 @@
 
   .sidebar-toggle {
     display: flex;
+  }
+
+  .add-list button[type='submit'] {
+    display: none;
+  }
+
+  .app-header .theme-toggle {
+    display: none;
+  }
+
+  .sidebar-settings {
+    display: block;
   }
 
   .sidebar-backdrop {

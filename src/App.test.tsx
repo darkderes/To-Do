@@ -72,6 +72,18 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: /cambiar a modo claro/i })).toBeInTheDocument()
   })
 
+  it('toggles the theme from the settings section inside the sidebar drawer', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: /listas de tareas, lista actual/i }))
+    await user.click(screen.getByRole('button', { name: /activar modo oscuro/i }))
+
+    expect(document.documentElement.dataset.theme).toBe('dark')
+    expect(window.localStorage.getItem('theme')).toBe('dark')
+    expect(screen.getByRole('button', { name: /activar modo claro/i })).toBeInTheDocument()
+  })
+
   it('shows a default list for new users', () => {
     render(<App />)
 
