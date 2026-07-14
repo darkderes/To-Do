@@ -82,17 +82,10 @@ function App() {
     }
   }
 
-  function addTodo(text: string, dueDate?: string, priority?: Priority) {
+  function addTodo(text: string) {
     setTodos([
       ...todos,
-      {
-        id: crypto.randomUUID(),
-        text,
-        completed: false,
-        listId: selectedListId,
-        dueDate,
-        priority,
-      },
+      { id: crypto.randomUUID(), text, completed: false, listId: selectedListId },
     ])
   }
 

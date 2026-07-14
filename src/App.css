@@ -586,18 +586,4 @@
     transition: transform 0.2s ease;
   }
 
-  .add-todo {
-    flex-wrap: wrap;
-  }
-
-  .add-todo input[type='text'] {
-    flex: 1 1 100%;
-  }
-
-  .add-todo input[type='date'],
-  .add-todo select,
-  .add-todo button[type='submit'] {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
 }

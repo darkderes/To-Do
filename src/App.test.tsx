@@ -609,20 +609,21 @@ describe('App', () => {
     expect(handle).toHaveAttribute('tabIndex', '-1')
   })
 
-  it('adds a todo with a due date and priority and shows them as badges', async () => {
+  it('adds a todo with just its text, with no due date or priority fields on the form', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.type(
-      screen.getByLabelText(/texto de la nueva tarea/i),
-      'Buy milk',
-    )
-    await user.type(screen.getByLabelText(/fecha límite/i), '2026-07-20')
-    await user.selectOptions(screen.getByLabelText(/^prioridad/i), 'high')
-    await user.click(screen.getByRole('button', { name: 'Añadir' }))
+    expect(screen.queryByLabelText(/fecha límite \(opcional\)/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/prioridad \(opcional\)/i)).not.toBeInTheDocument()
 
-    expect(screen.getByText(/20\/07\/2026/)).toBeInTheDocument()
-    expect(document.querySelector('.priority-badge')).toHaveTextContent('Alta')
+    await user.type(screen.getByLabelText(/texto de la nueva tarea/i), 'Buy milk{Enter}')
+
+    expect(screen.getByText('Buy milk')).toBeInTheDocument()
+    expect(document.querySelector('.due-badge')).not.toBeInTheDocument()
+    expect(document.querySelector('.priority-badge')).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /editar detalles de "buy milk"/i }),
+    ).toBeInTheDocument()
   })
 
   it('edits the due date and priority of an existing todo', async () => {
