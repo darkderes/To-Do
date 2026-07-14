@@ -51,9 +51,24 @@
 }
 
 .task-list-nav li {
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.task-list-item-row {
   display: flex;
   align-items: center;
   gap: 4px;
+  position: relative;
+  z-index: 1;
+  background: var(--bg);
+  transition: transform 0.2s ease;
+  touch-action: pan-y;
+}
+
+.task-list-item-reveal {
+  display: none;
 }
 
 .task-list-button {
@@ -483,6 +498,29 @@
 
   .app-header .theme-toggle {
     display: none;
+  }
+
+  .task-list-delete {
+    display: none;
+  }
+
+  .task-list-item-reveal {
+    display: flex;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 88px;
+  }
+
+  .task-list-swipe-delete {
+    flex: 1;
+    border: none;
+    background: #dc2626;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
   }
 
   .sidebar-settings {

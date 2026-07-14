@@ -356,6 +356,61 @@ describe('App', () => {
     expect(listButtons[1]).toHaveTextContent('Mis tareas')
   })
 
+  it('reveals a real delete button when swiping a mobile list row left, and removes it on tap', async () => {
+    vi.spyOn(window, 'matchMedia').mockReturnValue({
+      matches: true,
+      media: '(max-width: 640px)',
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    } as MediaQueryList)
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/nombre de la nueva lista/i), 'Work{Enter}')
+
+    const row = document.querySelectorAll('.task-list-item-row')[0]
+    fireEvent.pointerDown(row, { clientX: 300, clientY: 50, pointerId: 1 })
+    fireEvent.pointerMove(row, { clientX: 240, clientY: 50, pointerId: 1 })
+    fireEvent.pointerMove(row, { clientX: 200, clientY: 50, pointerId: 1 })
+    fireEvent.pointerUp(row, { clientX: 200, clientY: 50, pointerId: 1 })
+
+    const revealButton = screen.getByRole('button', { name: /quitar lista "mis tareas"/i })
+    expect(revealButton).toBeInTheDocument()
+
+    await user.click(revealButton)
+
+    expect(screen.queryByRole('button', { name: 'Mis tareas' })).not.toBeInTheDocument()
+  })
+
+  it('does not reveal the delete button on a mostly-vertical drag (lets the list scroll)', async () => {
+    vi.spyOn(window, 'matchMedia').mockReturnValue({
+      matches: true,
+      media: '(max-width: 640px)',
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    } as MediaQueryList)
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/nombre de la nueva lista/i), 'Work{Enter}')
+
+    const row = document.querySelectorAll('.task-list-item-row')[0]
+    fireEvent.pointerDown(row, { clientX: 300, clientY: 50, pointerId: 1 })
+    fireEvent.pointerMove(row, { clientX: 295, clientY: 90, pointerId: 1 })
+    fireEvent.pointerMove(row, { clientX: 290, clientY: 130, pointerId: 1 })
+    fireEvent.pointerUp(row, { clientX: 290, clientY: 130, pointerId: 1 })
+
+    expect(row).not.toHaveStyle({ transform: 'translateX(-88px)' })
+  })
+
   it('adds a todo with a due date and priority and shows them as badges', async () => {
     const user = userEvent.setup()
     render(<App />)
