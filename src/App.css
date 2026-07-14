@@ -163,6 +163,10 @@
   cursor: pointer;
 }
 
+.add-list button[type='submit'] {
+  display: none;
+}
+
 .sidebar-settings {
   display: none;
   margin-top: 20px;
@@ -232,7 +236,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 12px 16px;
+  padding: 12px 16px 28px;
   background: var(--bg);
   border-top: 1px solid var(--border);
   z-index: 5;
@@ -264,30 +268,8 @@
   cursor: pointer;
 }
 
-.batch-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  margin-bottom: 16px;
-}
-
-.batch-actions button {
-  padding: 4px 12px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
-}
-
-.batch-actions button:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.batch-actions button:disabled {
-  opacity: 0.5;
-  cursor: default;
+.add-todo button[type='submit'] {
+  display: none;
 }
 
 .todo-list {
@@ -574,14 +556,6 @@
 
   .sidebar-toggle {
     display: flex;
-  }
-
-  .add-list button[type='submit'] {
-    display: none;
-  }
-
-  .add-todo button[type='submit'] {
-    display: none;
   }
 
   .app-header .theme-toggle {

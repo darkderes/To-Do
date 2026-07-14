@@ -362,55 +362,7 @@ describe('App', () => {
     expect(screen.queryByText('Buy milk')).not.toBeInTheDocument()
   })
 
-  it('marks all todos in the current list as complete', async () => {
-    const user = userEvent.setup()
-    render(<App />)
-
-    await user.type(
-      screen.getByLabelText(/texto de la nueva tarea/i),
-      'Buy milk{Enter}',
-    )
-    await user.type(
-      screen.getByLabelText(/texto de la nueva tarea/i),
-      'Walk dog{Enter}',
-    )
-
-    await user.click(screen.getByRole('button', { name: 'Marcar todas' }))
-    await user.click(screen.getByRole('button', { name: /completadas \(2\)/i }))
-
-    const checkboxes = screen.getAllByRole('checkbox')
-    expect(
-      checkboxes.every((checkbox) => (checkbox as HTMLInputElement).checked),
-    ).toBe(true)
-    expect(screen.getByText('0 tareas pendientes')).toBeInTheDocument()
-  })
-
-  it('clears completed todos in the current list with per-task undo', async () => {
-    const user = userEvent.setup()
-    render(<App />)
-
-    await user.type(
-      screen.getByLabelText(/texto de la nueva tarea/i),
-      'Buy milk{Enter}',
-    )
-    await user.type(
-      screen.getByLabelText(/texto de la nueva tarea/i),
-      'Walk dog{Enter}',
-    )
-    await user.click(screen.getAllByRole('checkbox')[0])
-
-    await user.click(screen.getByRole('button', { name: 'Borrar completadas' }))
-
-    expect(screen.queryByText('Buy milk')).not.toBeInTheDocument()
-    expect(screen.getByText('Walk dog')).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: /deshacer/i }))
-
-    await user.click(screen.getByRole('button', { name: /completadas \(1\)/i }))
-    expect(screen.getByText('Buy milk')).toBeInTheDocument()
-  })
-
-  it('toggles the mark-all button between "Marcar todas" and "Desmarcar todas"', async () => {
+  it('does not show bulk mark-all/unmark-all or clear-completed actions', async () => {
     const user = userEvent.setup()
     render(<App />)
 
@@ -420,23 +372,14 @@ describe('App', () => {
     )
 
     expect(
-      screen.getByRole('button', { name: 'Borrar completadas' }),
-    ).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Marcar todas' })).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Marcar todas' }))
-
+      screen.queryByRole('button', { name: /marcar todas/i }),
+    ).not.toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: 'Desmarcar todas' }),
-    ).toBeInTheDocument()
+      screen.queryByRole('button', { name: /desmarcar todas/i }),
+    ).not.toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: 'Borrar completadas' }),
-    ).not.toBeDisabled()
-
-    await user.click(screen.getByRole('button', { name: 'Desmarcar todas' }))
-
-    expect(screen.getByRole('button', { name: 'Marcar todas' })).toBeInTheDocument()
-    expect(screen.getByRole('checkbox')).not.toBeChecked()
+      screen.queryByRole('button', { name: /borrar completadas/i }),
+    ).not.toBeInTheDocument()
   })
 
   it('reorders todos with the move up/down buttons', async () => {

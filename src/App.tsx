@@ -151,33 +151,6 @@ function App() {
     undoQueue.dismiss(entryId)
   }
 
-  function isInView(todo: Todo) {
-    return isMyDay ? todo.myDay === today : todo.listId === selectedListId
-  }
-
-  function toggleAllComplete() {
-    const hasActive = todos.some((todo) => isInView(todo) && !todo.completed)
-    setTodos(
-      todos.map((todo) =>
-        isInView(todo) ? { ...todo, completed: hasActive } : todo,
-      ),
-    )
-  }
-
-  function clearCompleted() {
-    let remaining = todos
-    todos
-      .filter((todo) => isInView(todo) && todo.completed)
-      .forEach((todo) => {
-        const index = remaining.findIndex(
-          (candidate) => candidate.id === todo.id,
-        )
-        undoQueue.push({ todo, index })
-        remaining = remaining.filter((candidate) => candidate.id !== todo.id)
-      })
-    setTodos(remaining)
-  }
-
   function moveList(id: string, direction: 'up' | 'down') {
     const currentIndex = lists.findIndex((list) => list.id === id)
     if (currentIndex === -1) return
@@ -220,7 +193,6 @@ function App() {
   )
 
   const activeCount = activeTodos.length
-  const completedCount = completedTodos.length
 
   function moveWithinSubset(
     subset: Todo[],
@@ -320,20 +292,6 @@ function App() {
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
         </div>
-        {listTodos.length > 0 && (
-          <div className="batch-actions">
-            <button type="button" onClick={toggleAllComplete}>
-              {activeCount === 0 ? 'Desmarcar todas' : 'Marcar todas'}
-            </button>
-            <button
-              type="button"
-              onClick={clearCompleted}
-              disabled={completedCount === 0}
-            >
-              Borrar completadas
-            </button>
-          </div>
-        )}
         <TodoList
           todos={activeTodos}
           emptyMessage={activeEmptyMessage}
