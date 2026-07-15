@@ -565,7 +565,7 @@ describe('App', () => {
     expect(row).not.toHaveStyle({ transform: 'translateX(-88px)' })
   })
 
-  it('reorders lists by dragging the mobile drag handle, without touching the swipe row', async () => {
+  it('reorders lists by long-pressing and dragging the row on touch, without touching the swipe row', async () => {
     vi.spyOn(window, 'matchMedia').mockReturnValue({
       matches: true,
       media: '(max-width: 640px)',
@@ -584,20 +584,13 @@ describe('App', () => {
       'Work{Enter}',
     )
 
-    const handles = document.querySelectorAll('.task-list-drag-handle')
-    expect(handles).toHaveLength(2)
-
-    fireEvent.pointerDown(handles[0], {
-      clientX: 20,
-      clientY: 10,
-      pointerId: 1,
+    const row = document.querySelectorAll('.task-list-item-row')[1]
+    fireEvent.pointerDown(row, { clientX: 20, clientY: 90, pointerId: 1 })
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 320))
     })
-    fireEvent.pointerMove(handles[0], {
-      clientX: 20,
-      clientY: 80,
-      pointerId: 1,
-    })
-    fireEvent.pointerUp(handles[0], { clientX: 20, clientY: 80, pointerId: 1 })
+    fireEvent.pointerMove(row, { clientX: 20, clientY: 10, pointerId: 1 })
+    fireEvent.pointerUp(row, { clientX: 20, clientY: 10, pointerId: 1 })
 
     const listButtons = screen.getAllByRole('button', {
       name: /^(mis tareas|work)$/i,
@@ -606,7 +599,7 @@ describe('App', () => {
     expect(listButtons[1]).toHaveTextContent('Mis tareas')
   })
 
-  it('excludes the drag handle from the accessibility tree and tab order', async () => {
+  it('excludes the drag handle from the accessibility tree', async () => {
     const user = userEvent.setup()
     render(<App />)
 
@@ -616,8 +609,8 @@ describe('App', () => {
     )
 
     const handle = document.querySelector('.task-list-drag-handle')
+    expect(handle?.tagName).toBe('SPAN')
     expect(handle).toHaveAttribute('aria-hidden', 'true')
-    expect(handle).toHaveAttribute('tabIndex', '-1')
   })
 
   function mockMobileMatchMedia() {
@@ -659,7 +652,7 @@ describe('App', () => {
     expect(screen.queryByText('Buy milk')).not.toBeInTheDocument()
   })
 
-  it('reorders todos by dragging the mobile drag handle', async () => {
+  it('reorders todos by long-pressing and dragging the row on touch', async () => {
     mockMobileMatchMedia()
     const user = userEvent.setup()
     render(<App />)
@@ -673,27 +666,20 @@ describe('App', () => {
       'Walk dog{Enter}',
     )
 
-    const handles = document.querySelectorAll('.todo-drag-handle')
-    expect(handles).toHaveLength(2)
-
-    fireEvent.pointerDown(handles[0], {
-      clientX: 20,
-      clientY: 10,
-      pointerId: 1,
+    const row = document.querySelectorAll('.todo-item-row')[0]
+    fireEvent.pointerDown(row, { clientX: 20, clientY: 10, pointerId: 1 })
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 320))
     })
-    fireEvent.pointerMove(handles[0], {
-      clientX: 20,
-      clientY: 80,
-      pointerId: 1,
-    })
-    fireEvent.pointerUp(handles[0], { clientX: 20, clientY: 80, pointerId: 1 })
+    fireEvent.pointerMove(row, { clientX: 20, clientY: 80, pointerId: 1 })
+    fireEvent.pointerUp(row, { clientX: 20, clientY: 80, pointerId: 1 })
 
-    const items = document.querySelectorAll('.todo-item-main span')
+    const items = document.querySelectorAll('.todo-item-main label span')
     expect(items[0]).toHaveTextContent('Walk dog')
     expect(items[1]).toHaveTextContent('Buy milk')
   })
 
-  it('excludes the todo drag handle from the accessibility tree and tab order', async () => {
+  it('excludes the todo drag handle from the accessibility tree', async () => {
     const user = userEvent.setup()
     render(<App />)
 
@@ -703,8 +689,8 @@ describe('App', () => {
     )
 
     const handle = document.querySelector('.todo-drag-handle')
+    expect(handle?.tagName).toBe('SPAN')
     expect(handle).toHaveAttribute('aria-hidden', 'true')
-    expect(handle).toHaveAttribute('tabIndex', '-1')
   })
 
   it('adds a todo with just its text, with no due date or priority fields on the form', async () => {

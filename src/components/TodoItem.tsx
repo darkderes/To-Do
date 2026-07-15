@@ -11,6 +11,7 @@ interface TodoItemProps {
   todo: Todo
   rowOffset: number
   rowTransitionNone: boolean
+  isReorderActive: boolean
   liStyle: CSSProperties
   isSwipeOpen: boolean
   isInMyDay: boolean
@@ -27,9 +28,6 @@ interface TodoItemProps {
   onRowPointerUp: (event: ReactPointerEvent<HTMLDivElement>) => void
   onLabelClick: (event: MouseEvent) => void
   onSwipeDelete: () => void
-  onHandlePointerDown: (event: ReactPointerEvent<HTMLButtonElement>) => void
-  onHandlePointerMove: (event: ReactPointerEvent<HTMLButtonElement>) => void
-  onHandlePointerUp: (event: ReactPointerEvent<HTMLButtonElement>) => void
   onStartEditingDetails: () => void
 }
 
@@ -42,6 +40,7 @@ export function TodoItem({
   todo,
   rowOffset,
   rowTransitionNone,
+  isReorderActive,
   liStyle,
   isSwipeOpen,
   isInMyDay,
@@ -54,9 +53,6 @@ export function TodoItem({
   onRowPointerUp,
   onLabelClick,
   onSwipeDelete,
-  onHandlePointerDown,
-  onHandlePointerMove,
-  onHandlePointerUp,
   onStartEditingDetails,
 }: TodoItemProps) {
   const [isEditingMeta, setIsEditingMeta] = useState(false)
@@ -96,6 +92,7 @@ export function TodoItem({
         style={{
           transform: `translateX(${rowOffset}px)`,
           transition: rowTransitionNone ? 'none' : undefined,
+          touchAction: isReorderActive ? 'none' : undefined,
         }}
         onPointerDown={onRowPointerDown}
         onPointerMove={onRowPointerMove}
@@ -104,18 +101,9 @@ export function TodoItem({
       >
         <div className="todo-item-main">
           <div className="todo-item-content">
-            <button
-              type="button"
-              className="todo-drag-handle"
-              aria-hidden="true"
-              tabIndex={-1}
-              onPointerDown={onHandlePointerDown}
-              onPointerMove={onHandlePointerMove}
-              onPointerUp={onHandlePointerUp}
-              onPointerCancel={onHandlePointerUp}
-            >
+            <span className="todo-drag-handle" aria-hidden="true">
               ⠿
-            </button>
+            </span>
             <label onClick={onLabelClick}>
               <input
                 type="checkbox"

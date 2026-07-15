@@ -8,13 +8,16 @@ import { TodoItem } from './TodoItem'
 
 const REVEAL_WIDTH = 88
 const SWIPE_LOCK_THRESHOLD = 8
+const LONG_PRESS_MS = 300
 
 interface SwipeDrag {
   id: string
   startX: number
   startY: number
   baseOffset: number
-  direction: 'horizontal' | 'vertical' | null
+  direction: 'horizontal' | 'vertical' | 'drag' | null
+  pointerId: number
+  element: HTMLDivElement
 }
 
 interface RowRect {
@@ -85,6 +88,14 @@ export function TodoList({
   const listRef = useRef<HTMLUListElement>(null)
   const dragRef = useRef<SwipeDrag | null>(null)
   const mouseDragRef = useRef<MouseRowDrag | null>(null)
+  const longPressTimerRef = useRef<number | null>(null)
+
+  function clearLongPressTimer() {
+    if (longPressTimerRef.current !== null) {
+      window.clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
+  }
 
   function beginReorderDrag(id: string, startY: number, deltaY: number) {
     setOpenSwipeId(null)
@@ -136,13 +147,26 @@ export function TodoList({
       return
     }
     if (!window.matchMedia('(max-width: 640px)').matches) return
+    const startY = event.clientY
+    const element = event.currentTarget
     dragRef.current = {
       id,
       startX: event.clientX,
-      startY: event.clientY,
+      startY,
       baseOffset: openSwipeId === id ? -REVEAL_WIDTH : 0,
       direction: null,
+      pointerId: event.pointerId,
+      element,
     }
+    clearLongPressTimer()
+    longPressTimerRef.current = window.setTimeout(() => {
+      longPressTimerRef.current = null
+      const drag = dragRef.current
+      if (!drag || drag.id !== id || drag.direction !== null) return
+      drag.direction = 'drag'
+      beginReorderDrag(id, startY, 0)
+      element.setPointerCapture?.(drag.pointerId)
+    }, LONG_PRESS_MS)
   }
 
   function handleRowPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
@@ -166,11 +190,18 @@ export function TodoList({
     const deltaX = event.clientX - drag.startX
     const deltaY = event.clientY - drag.startY
 
+    if (drag.direction === 'drag') {
+      event.preventDefault()
+      updateReorderDrag(deltaY)
+      return
+    }
+
     if (drag.direction === null) {
       const passedThreshold =
         Math.abs(deltaX) > SWIPE_LOCK_THRESHOLD ||
         Math.abs(deltaY) > SWIPE_LOCK_THRESHOLD
       if (!passedThreshold) return
+      clearLongPressTimer()
       drag.direction =
         Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical'
       if (drag.direction === 'horizontal') {
@@ -204,8 +235,18 @@ export function TodoList({
       return
     }
 
+    clearLongPressTimer()
     const drag = dragRef.current
     dragRef.current = null
+
+    if (drag?.direction === 'drag') {
+      finishReorderDrag()
+      if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId)
+      }
+      return
+    }
+
     if (!drag || drag.direction !== 'horizontal') return
     const finalOffset =
       liveOffset?.id === drag.id ? liveOffset.offset : drag.baseOffset
@@ -225,32 +266,6 @@ export function TodoList({
   function handleSwipeDelete(id: string) {
     setOpenSwipeId(null)
     onDelete(id)
-  }
-
-  function handleHandlePointerDown(
-    event: ReactPointerEvent<HTMLButtonElement>,
-    id: string,
-  ) {
-    if (!window.matchMedia('(max-width: 640px)').matches) return
-    event.stopPropagation()
-    beginReorderDrag(id, event.clientY, 0)
-    event.currentTarget.setPointerCapture?.(event.pointerId)
-  }
-
-  function handleHandlePointerMove(
-    event: ReactPointerEvent<HTMLButtonElement>,
-  ) {
-    if (!reorderDrag) return
-    event.preventDefault()
-    updateReorderDrag(event.clientY - reorderDrag.startY)
-  }
-
-  function handleHandlePointerUp(event: ReactPointerEvent<HTMLButtonElement>) {
-    if (!reorderDrag) return
-    finishReorderDrag()
-    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId)
-    }
   }
 
   if (todos.length === 0) {
@@ -296,6 +311,7 @@ export function TodoList({
             todo={todo}
             rowOffset={rowOffset}
             rowTransitionNone={isDraggingSwipe}
+            isReorderActive={reorderDrag?.id === todo.id}
             liStyle={{
               transform: liTransform,
               transition: liTransition,
@@ -313,11 +329,6 @@ export function TodoList({
             onRowPointerUp={handleRowPointerUp}
             onLabelClick={handleLabelClick}
             onSwipeDelete={() => handleSwipeDelete(todo.id)}
-            onHandlePointerDown={(event) =>
-              handleHandlePointerDown(event, todo.id)
-            }
-            onHandlePointerMove={handleHandlePointerMove}
-            onHandlePointerUp={handleHandlePointerUp}
             onStartEditingDetails={() => setOpenSwipeId(null)}
           />
         )

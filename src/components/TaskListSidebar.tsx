@@ -9,13 +9,16 @@ import type { TaskList } from '../types'
 
 const REVEAL_WIDTH = 88
 const SWIPE_LOCK_THRESHOLD = 8
+const LONG_PRESS_MS = 300
 
 interface SwipeDrag {
   id: string
   startX: number
   startY: number
   baseOffset: number
-  direction: 'horizontal' | 'vertical' | null
+  direction: 'horizontal' | 'vertical' | 'drag' | null
+  pointerId: number
+  element: HTMLDivElement
 }
 
 interface RowRect {
@@ -89,6 +92,14 @@ export function TaskListSidebar({
   const navRef = useRef<HTMLElement>(null)
   const dragRef = useRef<SwipeDrag | null>(null)
   const mouseDragRef = useRef<MouseRowDrag | null>(null)
+  const longPressTimerRef = useRef<number | null>(null)
+
+  function clearLongPressTimer() {
+    if (longPressTimerRef.current !== null) {
+      window.clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
+  }
 
   useEffect(() => {
     if (!isOpen) return
@@ -149,13 +160,26 @@ export function TaskListSidebar({
       return
     }
     if (!window.matchMedia('(max-width: 640px)').matches) return
+    const startY = event.clientY
+    const element = event.currentTarget
     dragRef.current = {
       id,
       startX: event.clientX,
-      startY: event.clientY,
+      startY,
       baseOffset: openSwipeId === id ? -REVEAL_WIDTH : 0,
       direction: null,
+      pointerId: event.pointerId,
+      element,
     }
+    clearLongPressTimer()
+    longPressTimerRef.current = window.setTimeout(() => {
+      longPressTimerRef.current = null
+      const drag = dragRef.current
+      if (!drag || drag.id !== id || drag.direction !== null) return
+      drag.direction = 'drag'
+      beginReorderDrag(id, startY, 0)
+      element.setPointerCapture?.(drag.pointerId)
+    }, LONG_PRESS_MS)
   }
 
   function handleRowPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
@@ -179,11 +203,18 @@ export function TaskListSidebar({
     const deltaX = event.clientX - drag.startX
     const deltaY = event.clientY - drag.startY
 
+    if (drag.direction === 'drag') {
+      event.preventDefault()
+      updateReorderDrag(deltaY)
+      return
+    }
+
     if (drag.direction === null) {
       const passedThreshold =
         Math.abs(deltaX) > SWIPE_LOCK_THRESHOLD ||
         Math.abs(deltaY) > SWIPE_LOCK_THRESHOLD
       if (!passedThreshold) return
+      clearLongPressTimer()
       drag.direction =
         Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical'
       if (drag.direction === 'horizontal') {
@@ -217,8 +248,18 @@ export function TaskListSidebar({
       return
     }
 
+    clearLongPressTimer()
     const drag = dragRef.current
     dragRef.current = null
+
+    if (drag?.direction === 'drag') {
+      finishReorderDrag()
+      if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId)
+      }
+      return
+    }
+
     if (!drag || drag.direction !== 'horizontal') return
     const finalOffset =
       liveOffset?.id === drag.id ? liveOffset.offset : drag.baseOffset
@@ -240,33 +281,6 @@ export function TaskListSidebar({
   function handleSwipeDelete(id: string) {
     setOpenSwipeId(null)
     onDelete(id)
-  }
-
-  function handleHandlePointerDown(
-    event: ReactPointerEvent<HTMLButtonElement>,
-    id: string,
-  ) {
-    if (lists.length <= 1) return
-    if (!window.matchMedia('(max-width: 640px)').matches) return
-    event.stopPropagation()
-    beginReorderDrag(id, event.clientY, 0)
-    event.currentTarget.setPointerCapture?.(event.pointerId)
-  }
-
-  function handleHandlePointerMove(
-    event: ReactPointerEvent<HTMLButtonElement>,
-  ) {
-    if (!reorderDrag) return
-    event.preventDefault()
-    updateReorderDrag(event.clientY - reorderDrag.startY)
-  }
-
-  function handleHandlePointerUp(event: ReactPointerEvent<HTMLButtonElement>) {
-    if (!reorderDrag) return
-    finishReorderDrag()
-    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId)
-    }
   }
 
   function handleAddSubmit(event: FormEvent) {
@@ -374,6 +388,8 @@ export function TaskListSidebar({
                 style={{
                   transform: `translateX(${rowOffset}px)`,
                   transition: isDraggingThis ? 'none' : undefined,
+                  touchAction:
+                    reorderDrag?.id === list.id ? 'none' : undefined,
                 }}
                 onPointerDown={(event) => handleRowPointerDown(event, list.id)}
                 onPointerMove={handleRowPointerMove}
@@ -394,20 +410,9 @@ export function TaskListSidebar({
                 ) : (
                   <>
                     {lists.length > 1 && (
-                      <button
-                        type="button"
-                        className="task-list-drag-handle"
-                        aria-hidden="true"
-                        tabIndex={-1}
-                        onPointerDown={(event) =>
-                          handleHandlePointerDown(event, list.id)
-                        }
-                        onPointerMove={handleHandlePointerMove}
-                        onPointerUp={handleHandlePointerUp}
-                        onPointerCancel={handleHandlePointerUp}
-                      >
+                      <span className="task-list-drag-handle" aria-hidden="true">
                         ⠿
-                      </button>
+                      </span>
                     )}
                     <button
                       type="button"
