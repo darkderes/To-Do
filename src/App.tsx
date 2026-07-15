@@ -235,7 +235,7 @@ function App() {
   const activeEmptyMessage =
     listTodos.length === 0
       ? isMyDay
-        ? 'Nada marcado para hoy — usa ☀️ en cualquier tarea.'
+        ? 'Nada marcado para hoy — usa 📅 en cualquier tarea.'
         : 'Aún no hay tareas — añade una abajo.'
       : 'No hay tareas activas — ¡todo al día!'
 

@@ -594,6 +594,9 @@
 
   .sidebar-toggle {
     display: flex;
+    width: 48px;
+    height: 48px;
+    font-size: 1.6rem;
   }
 
   .theme-toggle {

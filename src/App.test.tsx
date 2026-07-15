@@ -730,7 +730,7 @@ describe('App', () => {
       'Buy milk{Enter}',
     )
 
-    await user.click(screen.getByRole('button', { name: '☀️ Mi día' }))
+    await user.click(screen.getByRole('button', { name: '📅 Mi día' }))
     expect(
       screen.getByText(/nada marcado para hoy/i),
     ).toBeInTheDocument()
@@ -740,7 +740,7 @@ describe('App', () => {
       screen.getByRole('button', { name: /añadir "buy milk" a mi día/i }),
     )
 
-    await user.click(screen.getByRole('button', { name: '☀️ Mi día' }))
+    await user.click(screen.getByRole('button', { name: '📅 Mi día' }))
     expect(screen.getByText('Buy milk')).toBeInTheDocument()
 
     await user.click(
@@ -760,7 +760,7 @@ describe('App', () => {
       'Trabajo{Enter}',
     )
 
-    await user.click(screen.getByRole('button', { name: '☀️ Mi día' }))
+    await user.click(screen.getByRole('button', { name: '📅 Mi día' }))
     await user.type(
       screen.getByLabelText(/texto de la nueva tarea/i),
       'Send report{Enter}',

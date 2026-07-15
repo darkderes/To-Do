@@ -209,7 +209,7 @@ export function TodoItem({
               aria-pressed={isInMyDay}
               onClick={() => onToggleMyDay(todo.id)}
             >
-              ☀️
+              📅
             </button>
             <button
               type="button"

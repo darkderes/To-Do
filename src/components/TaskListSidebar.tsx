@@ -249,7 +249,7 @@ export function TaskListSidebar({
             className="task-list-button"
             onClick={() => onSelect(MY_DAY_ID)}
           >
-            ☀️ Mi día
+            📅 Mi día
           </button>
         </li>
       </ul>
