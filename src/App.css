@@ -629,6 +629,11 @@
 }
 
 @media (max-width: 640px) {
+  .add-todo input {
+    padding: 14px 12px 14px 36px;
+    font-size: 1.1rem;
+  }
+
   .app-header {
     justify-content: space-between;
   }
