@@ -367,8 +367,8 @@
   appearance: none;
   -webkit-appearance: none;
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   border: 2px solid var(--border);
   background: transparent;
@@ -391,11 +391,22 @@
 
 .todo-item label input[type='checkbox']:checked::after {
   content: '';
-  width: 11px;
-  height: 6px;
-  border-left: 2px solid var(--on-accent);
-  border-bottom: 2px solid var(--on-accent);
+  width: 9px;
+  height: 5px;
+  border-left: 1.5px solid var(--on-accent);
+  border-bottom: 1.5px solid var(--on-accent);
   transform: rotate(-45deg) translateY(-1px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .todo-item label input[type='checkbox']:not(:checked):hover::after {
+    content: '';
+    width: 9px;
+    height: 5px;
+    border-left: 1.5px solid var(--accent);
+    border-bottom: 1.5px solid var(--accent);
+    transform: rotate(-45deg) translateY(-1px);
+  }
 }
 
 .todo-item .completed {
