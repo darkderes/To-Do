@@ -68,7 +68,7 @@
 .task-list-item-row {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   position: relative;
   z-index: 1;
   background: var(--bg);
@@ -81,6 +81,9 @@
 }
 
 .task-list-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex: 1;
   min-width: 0;
   text-align: left;
@@ -96,12 +99,19 @@
   cursor: pointer;
 }
 
+.task-list-button svg {
+  flex-shrink: 0;
+}
+
 .task-list-nav li.active .task-list-button {
   background: var(--accent);
   color: var(--on-accent);
 }
 
 .task-list-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   background: transparent;
   color: var(--text);
@@ -166,9 +176,8 @@
   left: 10px;
   top: 50%;
   transform: translateY(-50%);
+  display: flex;
   color: var(--accent);
-  font-weight: 700;
-  font-size: 1.1rem;
   line-height: 1;
   pointer-events: none;
 }
@@ -438,7 +447,7 @@
 .todo-item-actions {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
@@ -515,6 +524,9 @@
 }
 
 .due-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.8rem;
   color: var(--text);
 }
@@ -542,6 +554,9 @@
 }
 
 .edit-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   border: none;
   background: transparent;
   color: var(--text);
@@ -556,22 +571,26 @@
 }
 
 .my-day-toggle {
-  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
   background: transparent;
   cursor: pointer;
-  font-size: 0.9rem;
-  padding: 2px 4px;
-  opacity: 0.35;
-  filter: grayscale(1);
+  padding: 4px;
+  opacity: 0.55;
 }
 
 .my-day-toggle:hover {
-  opacity: 0.7;
+  opacity: 0.85;
+  border-color: var(--accent);
 }
 
 .my-day-toggle.active {
+  border-color: var(--accent);
+  color: var(--accent);
   opacity: 1;
-  filter: none;
 }
 
 .empty-state {
@@ -666,6 +685,26 @@
 
   .theme-toggle {
     display: none;
+  }
+
+  .todo-item-row {
+    padding: 12px 0;
+  }
+
+  .my-day-toggle,
+  .edit-meta {
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .task-list-button {
+    padding: 12px 8px;
+  }
+
+  .task-list-action {
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .task-list-delete {

@@ -5,6 +5,13 @@ import type {
   MouseEvent,
   PointerEvent as ReactPointerEvent,
 } from 'react'
+import {
+  Calendar,
+  DotsSixVertical,
+  PencilSimple,
+  Star,
+  X,
+} from '@phosphor-icons/react'
 import { PRIORITY_LABELS, type Priority, type Todo } from '../types'
 
 interface TodoItemProps {
@@ -102,7 +109,7 @@ export function TodoItem({
         <div className="todo-item-main">
           <div className="todo-item-content">
             <span className="todo-drag-handle" aria-hidden="true">
-              ⠿
+              <DotsSixVertical size={18} />
             </span>
             <label onClick={onLabelClick}>
               <input
@@ -122,7 +129,7 @@ export function TodoItem({
               aria-label={`Eliminar "${todo.text}"`}
               onClick={() => onDelete(todo.id)}
             >
-              ×
+              <X aria-hidden="true" size={18} />
             </button>
           </div>
         </div>
@@ -154,7 +161,8 @@ export function TodoItem({
           <div className="todo-item-meta">
             {todo.dueDate && (
               <span className="due-badge">
-                📅 {formatDueDate(todo.dueDate)}
+                <Calendar aria-hidden="true" size={14} />
+                {formatDueDate(todo.dueDate)}
               </span>
             )}
             {todo.priority && (
@@ -173,7 +181,11 @@ export function TodoItem({
               aria-pressed={isInMyDay}
               onClick={() => onToggleMyDay(todo.id)}
             >
-              📅
+              <Star
+                aria-hidden="true"
+                size={16}
+                weight={isInMyDay ? 'fill' : 'regular'}
+              />
             </button>
             <button
               type="button"
@@ -181,7 +193,8 @@ export function TodoItem({
               aria-label={`Editar detalles de "${todo.text}"`}
               onClick={startEditingMeta}
             >
-              ✎ Detalles
+              <PencilSimple aria-hidden="true" size={14} />
+              Detalles
             </button>
           </div>
         )}

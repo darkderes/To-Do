@@ -4,6 +4,14 @@ import type {
   KeyboardEvent,
   PointerEvent as ReactPointerEvent,
 } from 'react'
+import {
+  DotsSixVertical,
+  Moon,
+  PencilSimple,
+  Plus,
+  Sun,
+  X,
+} from '@phosphor-icons/react'
 import { MY_DAY_ID } from '../types'
 import type { TaskList } from '../types'
 
@@ -324,7 +332,7 @@ export function TaskListSidebar({
             className="task-list-button"
             onClick={() => onSelect(MY_DAY_ID)}
           >
-            📅 Mi día
+            <Sun aria-hidden="true" size={16} /> Mi día
           </button>
         </li>
       </ul>
@@ -388,8 +396,7 @@ export function TaskListSidebar({
                 style={{
                   transform: `translateX(${rowOffset}px)`,
                   transition: isDraggingThis ? 'none' : undefined,
-                  touchAction:
-                    reorderDrag?.id === list.id ? 'none' : undefined,
+                  touchAction: reorderDrag?.id === list.id ? 'none' : undefined,
                 }}
                 onPointerDown={(event) => handleRowPointerDown(event, list.id)}
                 onPointerMove={handleRowPointerMove}
@@ -410,8 +417,11 @@ export function TaskListSidebar({
                 ) : (
                   <>
                     {lists.length > 1 && (
-                      <span className="task-list-drag-handle" aria-hidden="true">
-                        ⠿
+                      <span
+                        className="task-list-drag-handle"
+                        aria-hidden="true"
+                      >
+                        <DotsSixVertical size={18} />
                       </span>
                     )}
                     <button
@@ -427,7 +437,7 @@ export function TaskListSidebar({
                       aria-label={`Renombrar "${list.name}"`}
                       onClick={() => startEditing(list)}
                     >
-                      ✎
+                      <PencilSimple aria-hidden="true" size={16} />
                     </button>
                     {lists.length > 1 && (
                       <button
@@ -436,7 +446,7 @@ export function TaskListSidebar({
                         aria-label={`Eliminar lista "${list.name}"`}
                         onClick={() => onDelete(list.id)}
                       >
-                        ×
+                        <X aria-hidden="true" size={16} />
                       </button>
                     )}
                   </>
@@ -449,7 +459,7 @@ export function TaskListSidebar({
       <form className="add-list" onSubmit={handleAddSubmit}>
         <div className="input-with-icon">
           <span className="input-icon" aria-hidden="true">
-            +
+            <Plus size={16} weight="bold" />
           </span>
           <input
             type="text"
@@ -474,7 +484,9 @@ export function TaskListSidebar({
           <span aria-hidden="true">
             Modo {theme === 'dark' ? 'oscuro' : 'claro'}
           </span>
-          <span aria-hidden="true">{theme === 'dark' ? '☀️' : '🌙'}</span>
+          <span aria-hidden="true">
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          </span>
         </button>
       </div>
     </nav>

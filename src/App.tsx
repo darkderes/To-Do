@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { CaretDown, CaretUp, List, Moon, Sun } from '@phosphor-icons/react'
 import { AddTodo } from './components/AddTodo'
 import { TodoList } from './components/TodoList'
 import { TaskListSidebar } from './components/TaskListSidebar'
@@ -181,7 +182,11 @@ function App() {
 
   const activeCount = activeTodos.length
 
-  function reorderWithinSubset(subset: Todo[], id: string, targetIndex: number) {
+  function reorderWithinSubset(
+    subset: Todo[],
+    id: string,
+    targetIndex: number,
+  ) {
     const currentIndex = subset.findIndex((todo) => todo.id === id)
     if (currentIndex === -1 || currentIndex === targetIndex) return
     const targetTodo = subset[targetIndex]
@@ -240,7 +245,7 @@ function App() {
             aria-label={`Listas de tareas, lista actual: ${selectedListName}`}
             onClick={() => setIsSidebarOpen((open) => !open)}
           >
-            <span aria-hidden="true">☰</span>
+            <List aria-hidden="true" size={20} />
           </button>
           <h1>{selectedListName}</h1>
         </div>
@@ -252,7 +257,11 @@ function App() {
             theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
           }
         >
-          {theme === 'dark' ? '☀️' : '🌙'}
+          {theme === 'dark' ? (
+            <Sun aria-hidden="true" size={18} />
+          ) : (
+            <Moon aria-hidden="true" size={18} />
+          )}
         </button>
         <TodoList
           todos={activeTodos}
@@ -275,7 +284,11 @@ function App() {
               onClick={() => setShowCompleted((open) => !open)}
             >
               <span>Completadas ({completedTodos.length})</span>
-              <span aria-hidden="true">{showCompleted ? '▲' : '▼'}</span>
+              {showCompleted ? (
+                <CaretUp aria-hidden="true" size={16} />
+              ) : (
+                <CaretDown aria-hidden="true" size={16} />
+              )}
             </button>
             {showCompleted && (
               <TodoList

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { Plus } from '@phosphor-icons/react'
 
 interface AddTodoProps {
   onAdd: (text: string) => void
@@ -21,7 +22,7 @@ export function AddTodo({ onAdd }: AddTodoProps) {
       <form className="add-todo" onSubmit={handleSubmit}>
         <div className="input-with-icon">
           <span className="input-icon" aria-hidden="true">
-            +
+            <Plus size={16} weight="bold" />
           </span>
           <input
             type="text"
