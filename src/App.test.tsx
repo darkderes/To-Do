@@ -424,6 +424,67 @@ describe('App', () => {
     expect(items[1]).toHaveTextContent('Buy milk')
   })
 
+  it('ignores right-button mouse drags for reordering', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Walk dog{Enter}',
+    )
+
+    const row = document.querySelectorAll('.todo-item-row')[0]
+    fireEvent.pointerDown(row, {
+      clientX: 20,
+      clientY: 10,
+      pointerId: 1,
+      pointerType: 'mouse',
+      button: 2,
+    })
+    fireEvent.pointerMove(row, {
+      clientX: 20,
+      clientY: 90,
+      pointerId: 1,
+      pointerType: 'mouse',
+    })
+    fireEvent.pointerUp(row, {
+      clientX: 20,
+      clientY: 90,
+      pointerId: 1,
+      pointerType: 'mouse',
+    })
+
+    const items = document.querySelectorAll('.todo-item')
+    expect(items[0]).toHaveTextContent('Buy milk')
+    expect(items[1]).toHaveTextContent('Walk dog')
+  })
+
+  it('syncs todos written by another tab via the storage event', () => {
+    render(<App />)
+
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: 'todos',
+          newValue: JSON.stringify([
+            {
+              id: 'other-tab-1',
+              text: 'From other tab',
+              completed: false,
+              listId: 'default',
+            },
+          ]),
+        }),
+      )
+    })
+
+    expect(screen.getByText('From other tab')).toBeInTheDocument()
+  })
+
   it('reorders todos with arrow keys on the drag handle', async () => {
     const user = userEvent.setup()
     render(<App />)

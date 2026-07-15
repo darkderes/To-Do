@@ -1,9 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type {
-  FormEvent,
-  KeyboardEvent,
-  PointerEvent as ReactPointerEvent,
-} from 'react'
+import type { FormEvent, KeyboardEvent } from 'react'
 import {
   DotsSixVertical,
   Moon,
@@ -12,56 +8,9 @@ import {
   Sun,
   X,
 } from '@phosphor-icons/react'
+import { useRowDrag } from '../hooks/useRowDrag'
 import { MY_DAY_ID } from '../types'
 import type { TaskList } from '../types'
-
-const REVEAL_WIDTH = 88
-const SWIPE_LOCK_THRESHOLD = 8
-const LONG_PRESS_MS = 300
-
-interface SwipeDrag {
-  id: string
-  startX: number
-  startY: number
-  baseOffset: number
-  direction: 'horizontal' | 'vertical' | 'drag' | null
-  pointerId: number
-  element: HTMLDivElement
-}
-
-interface RowRect {
-  id: string
-  top: number
-  height: number
-}
-
-interface ReorderDrag {
-  id: string
-  draggedIndex: number
-  rects: RowRect[]
-  startY: number
-  deltaY: number
-  targetIndex: number
-}
-
-interface MouseRowDrag {
-  id: string
-  startY: number
-  started: boolean
-}
-
-function computeTargetIndex(
-  rects: RowRect[],
-  draggedIndex: number,
-  deltaY: number,
-) {
-  const draggedRect = rects[draggedIndex]
-  const draggedCenter = draggedRect.top + draggedRect.height / 2 + deltaY
-  const index = rects.findIndex(
-    (rect) => draggedCenter < rect.top + rect.height,
-  )
-  return index === -1 ? rects.length - 1 : index
-}
 
 interface TaskListSidebarProps {
   lists: TaskList[]
@@ -91,23 +40,14 @@ export function TaskListSidebar({
   const [newListName, setNewListName] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
-  const [openSwipeId, setOpenSwipeId] = useState<string | null>(null)
-  const [liveOffset, setLiveOffset] = useState<{
-    id: string
-    offset: number
-  } | null>(null)
-  const [reorderDrag, setReorderDrag] = useState<ReorderDrag | null>(null)
   const navRef = useRef<HTMLElement>(null)
-  const dragRef = useRef<SwipeDrag | null>(null)
-  const mouseDragRef = useRef<MouseRowDrag | null>(null)
-  const longPressTimerRef = useRef<number | null>(null)
-
-  function clearLongPressTimer() {
-    if (longPressTimerRef.current !== null) {
-      window.clearTimeout(longPressTimerRef.current)
-      longPressTimerRef.current = null
-    }
-  }
+  const drag = useRowDrag({
+    ids: lists.map((list) => list.id),
+    containerRef: navRef,
+    rowSelector: '.task-list-nav > li',
+    onReorderTo,
+    isDragEnabled: lists.length > 1,
+  })
 
   useEffect(() => {
     if (!isOpen) return
@@ -116,178 +56,16 @@ export function TaskListSidebar({
       ?.focus()
   }, [isOpen])
 
-  function beginReorderDrag(id: string, startY: number, deltaY: number) {
-    setOpenSwipeId(null)
-    const rowEls = navRef.current?.querySelectorAll<HTMLLIElement>(
-      '.task-list-nav > li',
-    )
-    if (!rowEls) return
-    const rects: RowRect[] = Array.from(rowEls).map((el, i) => {
-      const rect = el.getBoundingClientRect()
-      return { id: lists[i].id, top: rect.top, height: rect.height }
-    })
-    const draggedIndex = lists.findIndex((list) => list.id === id)
-    if (draggedIndex === -1) return
-    setReorderDrag({
-      id,
-      draggedIndex,
-      rects,
-      startY,
-      deltaY,
-      targetIndex: computeTargetIndex(rects, draggedIndex, deltaY),
-    })
-  }
-
-  function updateReorderDrag(deltaY: number) {
-    if (!reorderDrag) return
-    setReorderDrag({
-      ...reorderDrag,
-      deltaY,
-      targetIndex: computeTargetIndex(
-        reorderDrag.rects,
-        reorderDrag.draggedIndex,
-        deltaY,
-      ),
-    })
-  }
-
-  function finishReorderDrag() {
-    if (reorderDrag && reorderDrag.targetIndex !== reorderDrag.draggedIndex) {
-      onReorderTo(reorderDrag.id, reorderDrag.targetIndex)
-    }
-    setReorderDrag(null)
-  }
-
-  function handleRowPointerDown(
-    event: ReactPointerEvent<HTMLDivElement>,
-    id: string,
-  ) {
-    if (lists.length <= 1) return
-    if (event.pointerType === 'mouse') {
-      mouseDragRef.current = { id, startY: event.clientY, started: false }
-      return
-    }
-    if (!window.matchMedia('(max-width: 640px)').matches) return
-    const startY = event.clientY
-    const element = event.currentTarget
-    dragRef.current = {
-      id,
-      startX: event.clientX,
-      startY,
-      baseOffset: openSwipeId === id ? -REVEAL_WIDTH : 0,
-      direction: null,
-      pointerId: event.pointerId,
-      element,
-    }
-    clearLongPressTimer()
-    longPressTimerRef.current = window.setTimeout(() => {
-      longPressTimerRef.current = null
-      const drag = dragRef.current
-      if (!drag || drag.id !== id || drag.direction !== null) return
-      drag.direction = 'drag'
-      beginReorderDrag(id, startY, 0)
-      element.setPointerCapture?.(drag.pointerId)
-    }, LONG_PRESS_MS)
-  }
-
-  function handleRowPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
-    const mouseDrag = mouseDragRef.current
-    if (mouseDrag) {
-      const deltaY = event.clientY - mouseDrag.startY
-      if (!mouseDrag.started) {
-        if (Math.abs(deltaY) <= SWIPE_LOCK_THRESHOLD) return
-        mouseDrag.started = true
-        beginReorderDrag(mouseDrag.id, mouseDrag.startY, deltaY)
-        event.currentTarget.setPointerCapture?.(event.pointerId)
-        return
-      }
-      event.preventDefault()
-      updateReorderDrag(deltaY)
-      return
-    }
-
-    const drag = dragRef.current
-    if (!drag) return
-    const deltaX = event.clientX - drag.startX
-    const deltaY = event.clientY - drag.startY
-
-    if (drag.direction === 'drag') {
-      event.preventDefault()
-      updateReorderDrag(deltaY)
-      return
-    }
-
-    if (drag.direction === null) {
-      const passedThreshold =
-        Math.abs(deltaX) > SWIPE_LOCK_THRESHOLD ||
-        Math.abs(deltaY) > SWIPE_LOCK_THRESHOLD
-      if (!passedThreshold) return
-      clearLongPressTimer()
-      drag.direction =
-        Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical'
-      if (drag.direction === 'horizontal') {
-        event.currentTarget.setPointerCapture?.(event.pointerId)
-        if (openSwipeId && openSwipeId !== drag.id) setOpenSwipeId(null)
-      } else {
-        dragRef.current = null
-        return
-      }
-    }
-
-    if (drag.direction !== 'horizontal') return
-    event.preventDefault()
-    const nextOffset = Math.min(
-      0,
-      Math.max(-REVEAL_WIDTH, drag.baseOffset + deltaX),
-    )
-    setLiveOffset({ id: drag.id, offset: nextOffset })
-  }
-
-  function handleRowPointerUp(event: ReactPointerEvent<HTMLDivElement>) {
-    const mouseDrag = mouseDragRef.current
-    if (mouseDrag) {
-      mouseDragRef.current = null
-      if (mouseDrag.started) {
-        finishReorderDrag()
-        if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
-          event.currentTarget.releasePointerCapture(event.pointerId)
-        }
-      }
-      return
-    }
-
-    clearLongPressTimer()
-    const drag = dragRef.current
-    dragRef.current = null
-
-    if (drag?.direction === 'drag') {
-      finishReorderDrag()
-      if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
-        event.currentTarget.releasePointerCapture(event.pointerId)
-      }
-      return
-    }
-
-    if (!drag || drag.direction !== 'horizontal') return
-    const finalOffset =
-      liveOffset?.id === drag.id ? liveOffset.offset : drag.baseOffset
-    setLiveOffset(null)
-    setOpenSwipeId(finalOffset <= -REVEAL_WIDTH / 2 ? drag.id : null)
-    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId)
-    }
-  }
-
   function handleSelectClick(id: string) {
-    if (openSwipeId) {
-      setOpenSwipeId(null)
+    if (drag.openSwipeId) {
+      drag.setOpenSwipeId(null)
       return
     }
     onSelect(id)
   }
 
   function handleSwipeDelete(id: string) {
-    setOpenSwipeId(null)
+    drag.setOpenSwipeId(null)
     onDelete(id)
   }
 
@@ -349,128 +127,93 @@ export function TaskListSidebar({
         </li>
       </ul>
       <ul className="task-list-nav">
-        {lists.map((list, index) => {
-          const isDraggingThis = liveOffset?.id === list.id
-          const rowOffset = isDraggingThis
-            ? liveOffset.offset
-            : openSwipeId === list.id
-              ? -REVEAL_WIDTH
-              : 0
-
-          let liTransform: string | undefined
-          let liTransition: string | undefined
-          if (reorderDrag) {
-            const rowHeight =
-              reorderDrag.rects[reorderDrag.draggedIndex]?.height ?? 0
-            if (index === reorderDrag.draggedIndex) {
-              liTransform = `translateY(${reorderDrag.deltaY}px)`
-              liTransition = 'none'
-            } else if (
-              reorderDrag.targetIndex <= index &&
-              index < reorderDrag.draggedIndex
-            ) {
-              liTransform = `translateY(${rowHeight}px)`
-              liTransition = 'transform 0.15s ease'
-            } else if (
-              reorderDrag.draggedIndex < index &&
-              index <= reorderDrag.targetIndex
-            ) {
-              liTransform = `translateY(-${rowHeight}px)`
-              liTransition = 'transform 0.15s ease'
-            }
-          }
-
-          return (
-            <li
-              key={list.id}
-              className={list.id === selectedListId ? 'active' : ''}
+        {lists.map((list, index) => (
+          <li
+            key={list.id}
+            className={list.id === selectedListId ? 'active' : ''}
+            style={drag.getItemStyle(index, list.id)}
+          >
+            {lists.length > 1 && (
+              <div className="task-list-item-reveal">
+                <button
+                  type="button"
+                  className="task-list-swipe-delete"
+                  aria-label={`Quitar lista "${list.name}"`}
+                  onClick={() => handleSwipeDelete(list.id)}
+                >
+                  Eliminar
+                </button>
+              </div>
+            )}
+            <div
+              className="task-list-item-row"
               style={{
-                transform: liTransform,
-                transition: liTransition,
-                position: reorderDrag?.id === list.id ? 'relative' : undefined,
-                zIndex: reorderDrag?.id === list.id ? 30 : undefined,
+                transform: `translateX(${drag.getRowOffset(list.id)}px)`,
+                transition: drag.isSwipeDragging(list.id) ? 'none' : undefined,
+                touchAction: drag.isReorderActive(list.id) ? 'none' : undefined,
               }}
+              onPointerDown={(event) =>
+                drag.handleRowPointerDown(event, list.id)
+              }
+              onPointerMove={drag.handleRowPointerMove}
+              onPointerUp={drag.handleRowPointerUp}
+              onPointerCancel={drag.handleRowPointerUp}
             >
-              {lists.length > 1 && (
-                <div className="task-list-item-reveal">
+              {editingId === list.id ? (
+                <input
+                  type="text"
+                  className="task-list-rename-input"
+                  value={editingName}
+                  autoFocus
+                  aria-label={`Renombrar lista ${list.name}`}
+                  onChange={(event) => setEditingName(event.target.value)}
+                  onBlur={() => commitEditing(list.id)}
+                  onKeyDown={(event) => handleEditKeyDown(event, list.id)}
+                />
+              ) : (
+                <>
+                  {lists.length > 1 && (
+                    <button
+                      type="button"
+                      className="task-list-drag-handle"
+                      aria-label={`Reordenar lista "${list.name}" (flechas arriba/abajo)`}
+                      onKeyDown={(event) =>
+                        handleReorderKeyDown(event, index, list.id)
+                      }
+                    >
+                      <DotsSixVertical aria-hidden="true" size={18} />
+                    </button>
+                  )}
                   <button
                     type="button"
-                    className="task-list-swipe-delete"
-                    aria-label={`Quitar lista "${list.name}"`}
-                    onClick={() => handleSwipeDelete(list.id)}
+                    className="task-list-button"
+                    onClick={() => handleSelectClick(list.id)}
                   >
-                    Eliminar
+                    {list.name}
                   </button>
-                </div>
+                  <button
+                    type="button"
+                    className="task-list-action"
+                    aria-label={`Renombrar "${list.name}"`}
+                    onClick={() => startEditing(list)}
+                  >
+                    <PencilSimple aria-hidden="true" size={16} />
+                  </button>
+                  {lists.length > 1 && (
+                    <button
+                      type="button"
+                      className="task-list-action task-list-delete"
+                      aria-label={`Eliminar lista "${list.name}"`}
+                      onClick={() => onDelete(list.id)}
+                    >
+                      <X aria-hidden="true" size={16} />
+                    </button>
+                  )}
+                </>
               )}
-              <div
-                className="task-list-item-row"
-                style={{
-                  transform: `translateX(${rowOffset}px)`,
-                  transition: isDraggingThis ? 'none' : undefined,
-                  touchAction: reorderDrag?.id === list.id ? 'none' : undefined,
-                }}
-                onPointerDown={(event) => handleRowPointerDown(event, list.id)}
-                onPointerMove={handleRowPointerMove}
-                onPointerUp={handleRowPointerUp}
-                onPointerCancel={handleRowPointerUp}
-              >
-                {editingId === list.id ? (
-                  <input
-                    type="text"
-                    className="task-list-rename-input"
-                    value={editingName}
-                    autoFocus
-                    aria-label={`Renombrar lista ${list.name}`}
-                    onChange={(event) => setEditingName(event.target.value)}
-                    onBlur={() => commitEditing(list.id)}
-                    onKeyDown={(event) => handleEditKeyDown(event, list.id)}
-                  />
-                ) : (
-                  <>
-                    {lists.length > 1 && (
-                      <button
-                        type="button"
-                        className="task-list-drag-handle"
-                        aria-label={`Reordenar lista "${list.name}" (flechas arriba/abajo)`}
-                        onKeyDown={(event) =>
-                          handleReorderKeyDown(event, index, list.id)
-                        }
-                      >
-                        <DotsSixVertical aria-hidden="true" size={18} />
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="task-list-button"
-                      onClick={() => handleSelectClick(list.id)}
-                    >
-                      {list.name}
-                    </button>
-                    <button
-                      type="button"
-                      className="task-list-action"
-                      aria-label={`Renombrar "${list.name}"`}
-                      onClick={() => startEditing(list)}
-                    >
-                      <PencilSimple aria-hidden="true" size={16} />
-                    </button>
-                    {lists.length > 1 && (
-                      <button
-                        type="button"
-                        className="task-list-action task-list-delete"
-                        aria-label={`Eliminar lista "${list.name}"`}
-                        onClick={() => onDelete(list.id)}
-                      >
-                        <X aria-hidden="true" size={16} />
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
-            </li>
-          )
-        })}
+            </div>
+          </li>
+        ))}
       </ul>
       <form className="add-list" onSubmit={handleAddSubmit}>
         <div className="input-with-icon">

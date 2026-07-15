@@ -17,7 +17,11 @@ export function useTheme() {
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
-    window.localStorage.setItem(STORAGE_KEY, theme)
+    try {
+      window.localStorage.setItem(STORAGE_KEY, theme)
+    } catch {
+      // Storage lleno o bloqueado: el tema aplica igual, solo no persiste.
+    }
   }, [theme])
 
   function toggleTheme() {

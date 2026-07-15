@@ -6,8 +6,9 @@ import { TaskListSidebar } from './components/TaskListSidebar'
 import { UndoToastStack } from './components/UndoToastStack'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { useTheme } from './hooks/useTheme'
+import { useToday } from './hooks/useToday'
 import { useUndoQueue } from './hooks/useUndoQueue'
-import { MY_DAY_ID, getTodayString } from './types'
+import { MY_DAY_ID } from './types'
 import type { Priority, TaskList, Todo } from './types'
 import './App.css'
 
@@ -38,7 +39,7 @@ function App() {
   const sidebarToggleRef = useRef<HTMLButtonElement>(null)
   const undoQueue = useUndoQueue<PendingDelete>()
   const { theme, toggleTheme } = useTheme()
-  const today = getTodayString()
+  const today = useToday()
   const isMyDay = selectedListId === MY_DAY_ID
 
   function closeSidebar() {
