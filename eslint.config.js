@@ -7,7 +7,7 @@ import { globalIgnores } from 'eslint/config'
 import prettierConfig from 'eslint-config-prettier'
 
 export default tseslint.config([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'src-tauri/target']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

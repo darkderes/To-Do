@@ -424,6 +424,104 @@ describe('App', () => {
     expect(items[1]).toHaveTextContent('Buy milk')
   })
 
+  it('reorders todos with arrow keys on the drag handle', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Walk dog{Enter}',
+    )
+
+    fireEvent.keyDown(
+      screen.getByRole('button', { name: /reordenar "buy milk"/i }),
+      { key: 'ArrowDown' },
+    )
+
+    let items = document.querySelectorAll('.todo-item')
+    expect(items[0]).toHaveTextContent('Walk dog')
+    expect(items[1]).toHaveTextContent('Buy milk')
+
+    fireEvent.keyDown(
+      screen.getByRole('button', { name: /reordenar "buy milk"/i }),
+      { key: 'ArrowUp' },
+    )
+
+    items = document.querySelectorAll('.todo-item')
+    expect(items[0]).toHaveTextContent('Buy milk')
+    expect(items[1]).toHaveTextContent('Walk dog')
+  })
+
+  it('reorders lists with arrow keys on the drag handle', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/nombre de la nueva lista/i),
+      'Work{Enter}',
+    )
+
+    fireEvent.keyDown(
+      screen.getByRole('button', { name: /reordenar lista "work"/i }),
+      { key: 'ArrowUp' },
+    )
+
+    const listButtons = screen.getAllByRole('button', {
+      name: /^(mis tareas|work)$/i,
+    })
+    expect(listButtons[0]).toHaveTextContent('Work')
+    expect(listButtons[1]).toHaveTextContent('Mis tareas')
+  })
+
+  it('migrates stored todos without a listId to the default list', () => {
+    window.localStorage.setItem(
+      'todos',
+      JSON.stringify([
+        { id: 'legacy-1', text: 'Legacy task', completed: false },
+      ]),
+    )
+    render(<App />)
+
+    expect(screen.getByText('Legacy task')).toBeInTheDocument()
+
+    const stored = JSON.parse(window.localStorage.getItem('todos') ?? '[]') as {
+      listId?: string
+    }[]
+    expect(stored[0].listId).toBe('default')
+  })
+
+  it('restores an undone todo into the current list when its list was deleted', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/nombre de la nueva lista/i),
+      'Work{Enter}',
+    )
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Ship feature{Enter}',
+    )
+    await user.click(
+      screen.getByRole('button', { name: /eliminar "ship feature"/i }),
+    )
+    await user.click(
+      screen.getByRole('button', { name: /eliminar lista "work"/i }),
+    )
+
+    expect(
+      screen.getByRole('button', { name: 'Mis tareas' }),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /deshacer/i }))
+
+    expect(screen.getByText('Ship feature')).toBeInTheDocument()
+  })
+
   it('does not show move up/down buttons on todo items', async () => {
     const user = userEvent.setup()
     render(<App />)
@@ -599,7 +697,7 @@ describe('App', () => {
     expect(listButtons[1]).toHaveTextContent('Mis tareas')
   })
 
-  it('excludes the drag handle from the accessibility tree', async () => {
+  it('exposes the list drag handle as a labelled button for keyboard users', async () => {
     const user = userEvent.setup()
     render(<App />)
 
@@ -608,9 +706,10 @@ describe('App', () => {
       'Work{Enter}',
     )
 
-    const handle = document.querySelector('.task-list-drag-handle')
-    expect(handle?.tagName).toBe('SPAN')
-    expect(handle).toHaveAttribute('aria-hidden', 'true')
+    const handle = screen.getByRole('button', {
+      name: /reordenar lista "work"/i,
+    })
+    expect(handle).toHaveClass('task-list-drag-handle')
   })
 
   function mockMobileMatchMedia() {
@@ -679,7 +778,7 @@ describe('App', () => {
     expect(items[1]).toHaveTextContent('Buy milk')
   })
 
-  it('excludes the todo drag handle from the accessibility tree', async () => {
+  it('exposes the todo drag handle as a labelled button for keyboard users', async () => {
     const user = userEvent.setup()
     render(<App />)
 
@@ -688,9 +787,10 @@ describe('App', () => {
       'Buy milk{Enter}',
     )
 
-    const handle = document.querySelector('.todo-drag-handle')
-    expect(handle?.tagName).toBe('SPAN')
-    expect(handle).toHaveAttribute('aria-hidden', 'true')
+    const handle = screen.getByRole('button', {
+      name: /reordenar "buy milk"/i,
+    })
+    expect(handle).toHaveClass('todo-drag-handle')
   })
 
   it('adds a todo with just its text, with no due date or priority fields on the form', async () => {

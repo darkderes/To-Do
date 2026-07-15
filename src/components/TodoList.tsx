@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import type {
+  KeyboardEvent as ReactKeyboardEvent,
   MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
 } from 'react'
@@ -257,6 +258,18 @@ export function TodoList({
     }
   }
 
+  function handleReorderKeyDown(
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    index: number,
+    id: string,
+  ) {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return
+    event.preventDefault()
+    const target = index + (event.key === 'ArrowUp' ? -1 : 1)
+    if (target < 0 || target >= todos.length) return
+    onReorderTo(id, target)
+  }
+
   function handleLabelClick(event: ReactMouseEvent) {
     if (!openSwipeId) return
     event.preventDefault()
@@ -324,6 +337,9 @@ export function TodoList({
             onToggleMyDay={onToggleMyDay}
             onDelete={onDelete}
             onUpdateMeta={onUpdateMeta}
+            onReorderKeyDown={(event) =>
+              handleReorderKeyDown(event, index, todo.id)
+            }
             onRowPointerDown={(event) => handleRowPointerDown(event, todo.id)}
             onRowPointerMove={handleRowPointerMove}
             onRowPointerUp={handleRowPointerUp}

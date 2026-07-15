@@ -318,6 +318,18 @@ export function TaskListSidebar({
     if (event.key === 'Escape') setEditingId(null)
   }
 
+  function handleReorderKeyDown(
+    event: KeyboardEvent<HTMLButtonElement>,
+    index: number,
+    id: string,
+  ) {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return
+    event.preventDefault()
+    const target = index + (event.key === 'ArrowUp' ? -1 : 1)
+    if (target < 0 || target >= lists.length) return
+    onReorderTo(id, target)
+  }
+
   return (
     <nav
       id="task-list-sidebar"
@@ -417,12 +429,16 @@ export function TaskListSidebar({
                 ) : (
                   <>
                     {lists.length > 1 && (
-                      <span
+                      <button
+                        type="button"
                         className="task-list-drag-handle"
-                        aria-hidden="true"
+                        aria-label={`Reordenar lista "${list.name}" (flechas arriba/abajo)`}
+                        onKeyDown={(event) =>
+                          handleReorderKeyDown(event, index, list.id)
+                        }
                       >
-                        <DotsSixVertical size={18} />
-                      </span>
+                        <DotsSixVertical aria-hidden="true" size={18} />
+                      </button>
                     )}
                     <button
                       type="button"

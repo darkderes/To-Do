@@ -55,6 +55,24 @@ function App() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isSidebarOpen])
 
+  useEffect(() => {
+    const fallbackId = lists.some((list) => list.id === DEFAULT_LIST_ID)
+      ? DEFAULT_LIST_ID
+      : lists[0]?.id
+    if (!fallbackId) return
+    const hasOrphans = todos.some(
+      (todo) => !todo.listId || !lists.some((list) => list.id === todo.listId),
+    )
+    if (!hasOrphans) return
+    setTodos((current) =>
+      current.map((todo) =>
+        todo.listId && lists.some((list) => list.id === todo.listId)
+          ? todo
+          : { ...todo, listId: fallbackId },
+      ),
+    )
+  }, [todos, lists, setTodos])
+
   function selectList(id: string) {
     setSelectedListId(id)
     if (id !== MY_DAY_ID) setLastRealListId(id)
@@ -63,12 +81,14 @@ function App() {
 
   function addList(name: string) {
     const newList: TaskList = { id: crypto.randomUUID(), name }
-    setLists([...lists, newList])
+    setLists((current) => [...current, newList])
     selectList(newList.id)
   }
 
   function renameList(id: string, name: string) {
-    setLists(lists.map((list) => (list.id === id ? { ...list, name } : list)))
+    setLists((current) =>
+      current.map((list) => (list.id === id ? { ...list, name } : list)),
+    )
   }
 
   function deleteList(id: string) {
@@ -84,7 +104,7 @@ function App() {
     }
     const remaining = lists.filter((candidate) => candidate.id !== id)
     setLists(remaining)
-    setTodos(todos.filter((todo) => todo.listId !== id))
+    setTodos((current) => current.filter((todo) => todo.listId !== id))
     if (lastRealListId === id) setLastRealListId(remaining[0].id)
     if (selectedListId === id) {
       selectList(remaining[0].id)
@@ -92,8 +112,8 @@ function App() {
   }
 
   function addTodo(text: string) {
-    setTodos([
-      ...todos,
+    setTodos((current) => [
+      ...current,
       {
         id: crypto.randomUUID(),
         text,
@@ -105,8 +125,8 @@ function App() {
   }
 
   function toggleMyDay(id: string) {
-    setTodos(
-      todos.map((todo) =>
+    setTodos((current) =>
+      current.map((todo) =>
         todo.id === id
           ? { ...todo, myDay: todo.myDay === today ? undefined : today }
           : todo,
@@ -115,8 +135,8 @@ function App() {
   }
 
   function toggleTodo(id: string) {
-    setTodos(
-      todos.map((todo) =>
+    setTodos((current) =>
+      current.map((todo) =>
         todo.id === id ? { ...todo, completed: !todo.completed } : todo,
       ),
     )
@@ -127,8 +147,8 @@ function App() {
     dueDate: string | undefined,
     priority: Priority | undefined,
   ) {
-    setTodos(
-      todos.map((todo) =>
+    setTodos((current) =>
+      current.map((todo) =>
         todo.id === id ? { ...todo, dueDate, priority } : todo,
       ),
     )
@@ -138,7 +158,7 @@ function App() {
     const index = todos.findIndex((todo) => todo.id === id)
     if (index === -1) return
     undoQueue.push({ todo: todos[index], index })
-    setTodos(todos.filter((todo) => todo.id !== id))
+    setTodos((current) => current.filter((todo) => todo.id !== id))
   }
 
   function undoDelete(entryId: string) {
@@ -146,19 +166,28 @@ function App() {
       (candidate) => candidate.id === entryId,
     )
     if (!entry) return
-    const restored = [...todos]
-    restored.splice(entry.item.index, 0, entry.item.todo)
-    setTodos(restored)
+    const { todo, index } = entry.item
+    const listExists = lists.some((list) => list.id === todo.listId)
+    const restoredTodo = listExists
+      ? todo
+      : { ...todo, listId: isMyDay ? lastRealListId : selectedListId }
+    setTodos((current) => {
+      const restored = [...current]
+      restored.splice(index, 0, restoredTodo)
+      return restored
+    })
     undoQueue.dismiss(entryId)
   }
 
   function reorderList(id: string, targetIndex: number) {
-    const currentIndex = lists.findIndex((list) => list.id === id)
-    if (currentIndex === -1 || currentIndex === targetIndex) return
-    const updated = [...lists]
-    const [moved] = updated.splice(currentIndex, 1)
-    updated.splice(targetIndex, 0, moved)
-    setLists(updated)
+    setLists((current) => {
+      const currentIndex = current.findIndex((list) => list.id === id)
+      if (currentIndex === -1 || currentIndex === targetIndex) return current
+      const updated = [...current]
+      const [moved] = updated.splice(currentIndex, 1)
+      updated.splice(targetIndex, 0, moved)
+      return updated
+    })
   }
 
   const listTodos = useMemo(
@@ -190,17 +219,20 @@ function App() {
     const currentIndex = subset.findIndex((todo) => todo.id === id)
     if (currentIndex === -1 || currentIndex === targetIndex) return
     const targetTodo = subset[targetIndex]
-    const dragged = todos.find((todo) => todo.id === id)
-    if (!dragged) return
-    const withoutDragged = todos.filter((todo) => todo.id !== id)
-    const targetFullIndex = withoutDragged.findIndex(
-      (todo) => todo.id === targetTodo.id,
-    )
-    const insertIndex =
-      currentIndex < targetIndex ? targetFullIndex + 1 : targetFullIndex
-    const updated = [...withoutDragged]
-    updated.splice(insertIndex, 0, dragged)
-    setTodos(updated)
+    setTodos((current) => {
+      const dragged = current.find((todo) => todo.id === id)
+      if (!dragged) return current
+      const withoutDragged = current.filter((todo) => todo.id !== id)
+      const targetFullIndex = withoutDragged.findIndex(
+        (todo) => todo.id === targetTodo.id,
+      )
+      if (targetFullIndex === -1) return current
+      const insertIndex =
+        currentIndex < targetIndex ? targetFullIndex + 1 : targetFullIndex
+      const updated = [...withoutDragged]
+      updated.splice(insertIndex, 0, dragged)
+      return updated
+    })
   }
 
   const selectedList = lists.find((list) => list.id === selectedListId)

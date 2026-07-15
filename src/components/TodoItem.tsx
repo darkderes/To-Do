@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type {
   CSSProperties,
   FormEvent,
+  KeyboardEvent as ReactKeyboardEvent,
   MouseEvent,
   PointerEvent as ReactPointerEvent,
 } from 'react'
@@ -30,6 +31,7 @@ interface TodoItemProps {
     dueDate: string | undefined,
     priority: Priority | undefined,
   ) => void
+  onReorderKeyDown: (event: ReactKeyboardEvent<HTMLButtonElement>) => void
   onRowPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void
   onRowPointerMove: (event: ReactPointerEvent<HTMLDivElement>) => void
   onRowPointerUp: (event: ReactPointerEvent<HTMLDivElement>) => void
@@ -55,6 +57,7 @@ export function TodoItem({
   onToggleMyDay,
   onDelete,
   onUpdateMeta,
+  onReorderKeyDown,
   onRowPointerDown,
   onRowPointerMove,
   onRowPointerUp,
@@ -108,9 +111,14 @@ export function TodoItem({
       >
         <div className="todo-item-main">
           <div className="todo-item-content">
-            <span className="todo-drag-handle" aria-hidden="true">
-              <DotsSixVertical size={18} />
-            </span>
+            <button
+              type="button"
+              className="todo-drag-handle"
+              aria-label={`Reordenar "${todo.text}" (flechas arriba/abajo)`}
+              onKeyDown={onReorderKeyDown}
+            >
+              <DotsSixVertical aria-hidden="true" size={18} />
+            </button>
             <label onClick={onLabelClick}>
               <input
                 type="checkbox"
