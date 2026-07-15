@@ -1,45 +1,52 @@
 import { useEffect, useRef } from 'react'
-import type { UndoEntry } from '../hooks/useUndoQueue'
 
-interface UndoToastStackProps<T> {
-  entries: UndoEntry<T>[]
+export interface ToastItem {
+  id: string
+  message: string
+  focusOnMount: boolean
+}
+
+interface UndoToastStackProps {
+  items: ToastItem[]
   onUndo: (id: string) => void
   onPause: (id: string) => void
   onResume: (id: string) => void
 }
 
-export function UndoToastStack<T>({
-  entries,
+export function UndoToastStack({
+  items,
   onUndo,
   onPause,
   onResume,
-}: UndoToastStackProps<T>) {
-  const latestId = entries[entries.length - 1]?.id
+}: UndoToastStackProps) {
+  const latest = items[items.length - 1]
+  const latestId = latest?.id
+  const latestFocusOnMount = latest?.focusOnMount ?? false
   const latestButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
-    if (latestId) latestButtonRef.current?.focus()
-  }, [latestId])
+    if (latestId && latestFocusOnMount) latestButtonRef.current?.focus()
+  }, [latestId, latestFocusOnMount])
 
-  if (entries.length === 0) return null
+  if (items.length === 0) return null
 
   return (
-    <div className="toast-stack" aria-label="Tareas eliminadas recientemente">
-      {entries.map((entry) => (
+    <div className="toast-stack" aria-label="Acciones recientes">
+      {items.map((item) => (
         <div
-          key={entry.id}
+          key={item.id}
           className="toast"
           role="status"
-          onMouseEnter={() => onPause(entry.id)}
-          onMouseLeave={() => onResume(entry.id)}
-          onFocus={() => onPause(entry.id)}
-          onBlur={() => onResume(entry.id)}
+          onMouseEnter={() => onPause(item.id)}
+          onMouseLeave={() => onResume(item.id)}
+          onFocus={() => onPause(item.id)}
+          onBlur={() => onResume(item.id)}
         >
-          <span>Tarea eliminada</span>
+          <span>{item.message}</span>
           <button
             type="button"
-            ref={entry.id === latestId ? latestButtonRef : undefined}
-            onClick={() => onUndo(entry.id)}
+            ref={item.id === latestId ? latestButtonRef : undefined}
+            onClick={() => onUndo(item.id)}
           >
             Deshacer
           </button>

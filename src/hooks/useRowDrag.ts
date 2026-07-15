@@ -131,6 +131,12 @@ export function useRowDrag({
     id: string,
   ) {
     if (!isDragEnabled) return
+    if (
+      event.target instanceof Element &&
+      event.target.closest('input, select, textarea')
+    ) {
+      return
+    }
     if (event.pointerType === 'mouse') {
       if (event.button !== 0) return
       mouseDragRef.current = { id, startY: event.clientY, started: false }

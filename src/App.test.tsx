@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from './App'
+import { getTodayString } from './types'
 
 describe('App', () => {
   beforeEach(() => {
@@ -207,6 +208,112 @@ describe('App', () => {
     )
 
     expect(screen.getByRole('button', { name: 'Work' })).toBeInTheDocument()
+  })
+
+  it('edits a todo text inline with the pencil button', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+    await user.click(screen.getByRole('button', { name: 'Editar "Buy milk"' }))
+
+    const input = screen.getByLabelText(/editar texto de "buy milk"/i)
+    await user.clear(input)
+    await user.type(input, 'Buy oat milk{Enter}')
+
+    expect(screen.getByText('Buy oat milk')).toBeInTheDocument()
+    expect(screen.queryByText('Buy milk')).not.toBeInTheDocument()
+  })
+
+  it('cancels a todo text edit with Escape, keeping the original text', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+    await user.click(screen.getByRole('button', { name: 'Editar "Buy milk"' }))
+
+    const input = screen.getByLabelText(/editar texto de "buy milk"/i)
+    await user.clear(input)
+    await user.type(input, 'Something else{Escape}')
+
+    expect(screen.getByText('Buy milk')).toBeInTheDocument()
+    expect(screen.queryByText('Something else')).not.toBeInTheDocument()
+  })
+
+  it('shows an undo toast when completing a task, without stealing focus', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+    await user.click(screen.getByRole('checkbox'))
+
+    expect(screen.getByText('Tarea completada')).toBeInTheDocument()
+    const undoButton = screen.getByRole('button', { name: /deshacer/i })
+    expect(undoButton).not.toHaveFocus()
+
+    await user.click(undoButton)
+
+    expect(screen.getByText('Buy milk')).toBeInTheDocument()
+    expect(screen.getByText('1 tarea pendiente')).toBeInTheDocument()
+  })
+
+  it('marks overdue tasks and tasks due today on their badge', () => {
+    const today = getTodayString()
+    window.localStorage.setItem(
+      'todos',
+      JSON.stringify([
+        {
+          id: '1',
+          text: 'Old task',
+          completed: false,
+          listId: 'default',
+          dueDate: '2000-01-01',
+        },
+        {
+          id: '2',
+          text: 'Today task',
+          completed: false,
+          listId: 'default',
+          dueDate: today,
+        },
+      ]),
+    )
+    render(<App />)
+
+    expect(screen.getByText(/vencida · 01\/01\/2000/i)).toBeInTheDocument()
+    expect(screen.getByText('Hoy')).toBeInTheDocument()
+  })
+
+  it('closes the details form with the cancel button without saving', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+    await user.click(
+      screen.getByRole('button', { name: /editar detalles de "buy milk"/i }),
+    )
+    await user.selectOptions(
+      screen.getByLabelText(/prioridad de "buy milk"/i),
+      'high',
+    )
+    await user.click(screen.getByRole('button', { name: /cancelar/i }))
+
+    expect(
+      screen.queryByRole('button', { name: /guardar/i }),
+    ).not.toBeInTheDocument()
+    expect(document.querySelector('.priority-badge')).not.toBeInTheDocument()
   })
 
   it('undoes a todo deletion within the undo window', async () => {

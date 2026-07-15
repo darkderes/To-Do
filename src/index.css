@@ -5,6 +5,7 @@
   --border: #e5e4e7;
   --accent: #9328db;
   --on-accent: var(--bg);
+  --danger: #b91c1c;
 
   --priority-low-bg: #dcfce7;
   --priority-low-text: #166534;
@@ -33,6 +34,7 @@
   --border: #2e303a;
   --accent: #c084fc;
   --on-accent: var(--bg);
+  --danger: #f87171;
 
   --priority-low-bg: #14532d;
   --priority-low-text: #bbf7d0;
@@ -50,4 +52,15 @@ h1 {
   font-family: var(--sans);
   font-weight: 500;
   color: var(--text-h);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -10,6 +10,7 @@ import {
   Calendar,
   DotsSixVertical,
   PencilSimple,
+  Sliders,
   Star,
   X,
 } from '@phosphor-icons/react'
@@ -17,6 +18,7 @@ import { PRIORITY_LABELS, type Priority, type Todo } from '../types'
 
 interface TodoItemProps {
   todo: Todo
+  today: string
   rowOffset: number
   rowTransitionNone: boolean
   isReorderActive: boolean
@@ -24,6 +26,7 @@ interface TodoItemProps {
   isSwipeOpen: boolean
   isInMyDay: boolean
   onToggle: (id: string) => void
+  onRename: (id: string, text: string) => void
   onToggleMyDay: (id: string) => void
   onDelete: (id: string) => void
   onUpdateMeta: (
@@ -40,13 +43,26 @@ interface TodoItemProps {
   onStartEditingDetails: () => void
 }
 
-function formatDueDate(dueDate: string) {
+function addDaysToIso(iso: string, days: number) {
+  const [year, month, day] = iso.split('-').map(Number)
+  const date = new Date(year, month - 1, day + days)
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${mm}-${dd}`
+}
+
+function formatDueDate(dueDate: string, today: string) {
   const [year, month, day] = dueDate.split('-')
-  return `${day}/${month}/${year}`
+  const formatted = `${day}/${month}/${year}`
+  if (dueDate < today) return `Vencida · ${formatted}`
+  if (dueDate === today) return 'Hoy'
+  if (dueDate === addDaysToIso(today, 1)) return 'Mañana'
+  return formatted
 }
 
 export function TodoItem({
   todo,
+  today,
   rowOffset,
   rowTransitionNone,
   isReorderActive,
@@ -54,6 +70,7 @@ export function TodoItem({
   isSwipeOpen,
   isInMyDay,
   onToggle,
+  onRename,
   onToggleMyDay,
   onDelete,
   onUpdateMeta,
@@ -66,17 +83,32 @@ export function TodoItem({
   onStartEditingDetails,
 }: TodoItemProps) {
   const [isEditingMeta, setIsEditingMeta] = useState(false)
+  const [isEditingText, setIsEditingText] = useState(false)
+  const [textDraft, setTextDraft] = useState(todo.text)
   const [dueDateDraft, setDueDateDraft] = useState(todo.dueDate ?? '')
   const [priorityDraft, setPriorityDraft] = useState<Priority | ''>(
     todo.priority ?? '',
   )
   const showEditForm = isEditingMeta && !isSwipeOpen
+  const showTextInput = isEditingText && !isSwipeOpen
 
   function startEditingMeta() {
     setDueDateDraft(todo.dueDate ?? '')
     setPriorityDraft(todo.priority ?? '')
     setIsEditingMeta(true)
     onStartEditingDetails()
+  }
+
+  function startEditingText() {
+    setTextDraft(todo.text)
+    setIsEditingText(true)
+    onStartEditingDetails()
+  }
+
+  function commitTextEdit() {
+    const trimmed = textDraft.trim()
+    if (trimmed && trimmed !== todo.text) onRename(todo.id, trimmed)
+    setIsEditingText(false)
   }
 
   function commitMeta(event: FormEvent) {
@@ -119,18 +151,42 @@ export function TodoItem({
             >
               <DotsSixVertical aria-hidden="true" size={18} />
             </button>
-            <label onClick={onLabelClick}>
+            {showTextInput ? (
               <input
-                type="checkbox"
-                checked={todo.completed}
-                onChange={() => onToggle(todo.id)}
+                type="text"
+                className="todo-rename-input"
+                value={textDraft}
+                autoFocus
+                aria-label={`Editar texto de "${todo.text}"`}
+                onChange={(event) => setTextDraft(event.target.value)}
+                onBlur={commitTextEdit}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') commitTextEdit()
+                  if (event.key === 'Escape') setIsEditingText(false)
+                }}
               />
-              <span className={todo.completed ? 'completed' : ''}>
-                {todo.text}
-              </span>
-            </label>
+            ) : (
+              <label onClick={onLabelClick}>
+                <input
+                  type="checkbox"
+                  checked={todo.completed}
+                  onChange={() => onToggle(todo.id)}
+                />
+                <span className={todo.completed ? 'completed' : ''}>
+                  {todo.text}
+                </span>
+              </label>
+            )}
           </div>
           <div className="todo-item-actions">
+            <button
+              type="button"
+              className="edit-text"
+              aria-label={`Editar "${todo.text}"`}
+              onClick={startEditingText}
+            >
+              <PencilSimple aria-hidden="true" size={16} />
+            </button>
             <button
               type="button"
               className="delete"
@@ -142,7 +198,13 @@ export function TodoItem({
           </div>
         </div>
         {showEditForm ? (
-          <form className="todo-item-meta-form" onSubmit={commitMeta}>
+          <form
+            className="todo-item-meta-form"
+            onSubmit={commitMeta}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') setIsEditingMeta(false)
+            }}
+          >
             <input
               type="date"
               value={dueDateDraft}
@@ -164,13 +226,28 @@ export function TodoItem({
               ))}
             </select>
             <button type="submit">Guardar</button>
+            <button
+              type="button"
+              className="meta-cancel"
+              onClick={() => setIsEditingMeta(false)}
+            >
+              Cancelar
+            </button>
           </form>
         ) : (
           <div className="todo-item-meta">
             {todo.dueDate && (
-              <span className="due-badge">
+              <span
+                className={`due-badge${
+                  todo.dueDate < today
+                    ? ' overdue'
+                    : todo.dueDate === today
+                      ? ' due-today'
+                      : ''
+                }`}
+              >
                 <Calendar aria-hidden="true" size={14} />
-                {formatDueDate(todo.dueDate)}
+                {formatDueDate(todo.dueDate, today)}
               </span>
             )}
             {todo.priority && (
@@ -201,7 +278,7 @@ export function TodoItem({
               aria-label={`Editar detalles de "${todo.text}"`}
               onClick={startEditingMeta}
             >
-              <PencilSimple aria-hidden="true" size={14} />
+              <Sliders aria-hidden="true" size={14} />
               Detalles
             </button>
           </div>

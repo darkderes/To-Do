@@ -11,6 +11,7 @@ interface TodoListProps {
   todos: Todo[]
   emptyMessage: string
   onToggle: (id: string) => void
+  onRename: (id: string, text: string) => void
   onDelete: (id: string) => void
   onReorderTo: (id: string, targetIndex: number) => void
   onUpdateMeta: (
@@ -26,6 +27,7 @@ export function TodoList({
   todos,
   emptyMessage,
   onToggle,
+  onRename,
   onDelete,
   onReorderTo,
   onUpdateMeta,
@@ -73,6 +75,7 @@ export function TodoList({
         <TodoItem
           key={todo.id}
           todo={todo}
+          today={today}
           rowOffset={drag.getRowOffset(todo.id)}
           rowTransitionNone={drag.isSwipeDragging(todo.id)}
           isReorderActive={drag.isReorderActive(todo.id)}
@@ -80,6 +83,7 @@ export function TodoList({
           isSwipeOpen={drag.openSwipeId === todo.id}
           isInMyDay={todo.myDay === today}
           onToggle={onToggle}
+          onRename={onRename}
           onToggleMyDay={onToggleMyDay}
           onDelete={onDelete}
           onUpdateMeta={onUpdateMeta}

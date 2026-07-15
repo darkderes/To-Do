@@ -15,10 +15,9 @@ import './App.css'
 const DEFAULT_LIST_ID = 'default'
 const DEFAULT_LISTS: TaskList[] = [{ id: DEFAULT_LIST_ID, name: 'Mis tareas' }]
 
-interface PendingDelete {
-  todo: Todo
-  index: number
-}
+type PendingUndo =
+  | { kind: 'delete'; todo: Todo; index: number }
+  | { kind: 'complete'; todoId: string }
 
 function App() {
   const [lists, setLists] = useLocalStorage<TaskList[]>(
@@ -37,7 +36,7 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [showCompleted, setShowCompleted] = useState(false)
   const sidebarToggleRef = useRef<HTMLButtonElement>(null)
-  const undoQueue = useUndoQueue<PendingDelete>()
+  const undoQueue = useUndoQueue<PendingUndo>()
   const { theme, toggleTheme } = useTheme()
   const today = useToday()
   const isMyDay = selectedListId === MY_DAY_ID
@@ -135,7 +134,16 @@ function App() {
     )
   }
 
+  function renameTodo(id: string, text: string) {
+    setTodos((current) =>
+      current.map((todo) => (todo.id === id ? { ...todo, text } : todo)),
+    )
+  }
+
   function toggleTodo(id: string) {
+    const target = todos.find((todo) => todo.id === id)
+    if (!target) return
+    if (!target.completed) undoQueue.push({ kind: 'complete', todoId: id })
     setTodos((current) =>
       current.map((todo) =>
         todo.id === id ? { ...todo, completed: !todo.completed } : todo,
@@ -158,25 +166,34 @@ function App() {
   function deleteTodo(id: string) {
     const index = todos.findIndex((todo) => todo.id === id)
     if (index === -1) return
-    undoQueue.push({ todo: todos[index], index })
+    undoQueue.push({ kind: 'delete', todo: todos[index], index })
     setTodos((current) => current.filter((todo) => todo.id !== id))
   }
 
-  function undoDelete(entryId: string) {
+  function undoAction(entryId: string) {
     const entry = undoQueue.entries.find(
       (candidate) => candidate.id === entryId,
     )
     if (!entry) return
-    const { todo, index } = entry.item
-    const listExists = lists.some((list) => list.id === todo.listId)
-    const restoredTodo = listExists
-      ? todo
-      : { ...todo, listId: isMyDay ? lastRealListId : selectedListId }
-    setTodos((current) => {
-      const restored = [...current]
-      restored.splice(index, 0, restoredTodo)
-      return restored
-    })
+    if (entry.item.kind === 'delete') {
+      const { todo, index } = entry.item
+      const listExists = lists.some((list) => list.id === todo.listId)
+      const restoredTodo = listExists
+        ? todo
+        : { ...todo, listId: isMyDay ? lastRealListId : selectedListId }
+      setTodos((current) => {
+        const restored = [...current]
+        restored.splice(index, 0, restoredTodo)
+        return restored
+      })
+    } else {
+      const { todoId } = entry.item
+      setTodos((current) =>
+        current.map((todo) =>
+          todo.id === todoId ? { ...todo, completed: false } : todo,
+        ),
+      )
+    }
     undoQueue.dismiss(entryId)
   }
 
@@ -242,7 +259,7 @@ function App() {
   const activeEmptyMessage =
     listTodos.length === 0
       ? isMyDay
-        ? 'Nada marcado para hoy — usa 📅 en cualquier tarea.'
+        ? 'Nada marcado para hoy — usa la estrella en cualquier tarea.'
         : 'Aún no hay tareas — añade una abajo.'
       : 'No hay tareas activas — ¡todo al día!'
 
@@ -300,6 +317,7 @@ function App() {
           todos={activeTodos}
           emptyMessage={activeEmptyMessage}
           onToggle={toggleTodo}
+          onRename={renameTodo}
           onDelete={deleteTodo}
           onReorderTo={(id, targetIndex) =>
             reorderWithinSubset(activeTodos, id, targetIndex)
@@ -328,6 +346,7 @@ function App() {
                 todos={completedTodos}
                 emptyMessage="No hay tareas completadas."
                 onToggle={toggleTodo}
+                onRename={renameTodo}
                 onDelete={deleteTodo}
                 onReorderTo={(id, targetIndex) =>
                   reorderWithinSubset(completedTodos, id, targetIndex)
@@ -346,8 +365,15 @@ function App() {
         <AddTodo onAdd={addTodo} />
       </main>
       <UndoToastStack
-        entries={undoQueue.entries}
-        onUndo={undoDelete}
+        items={undoQueue.entries.map((entry) => ({
+          id: entry.id,
+          message:
+            entry.item.kind === 'delete'
+              ? 'Tarea eliminada'
+              : 'Tarea completada',
+          focusOnMount: entry.item.kind === 'delete',
+        }))}
+        onUndo={undoAction}
         onPause={undoQueue.pause}
         onResume={undoQueue.resume}
       />
