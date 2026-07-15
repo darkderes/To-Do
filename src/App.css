@@ -716,6 +716,9 @@
 
   .sidebar-settings {
     display: block;
+  }
+
+  .add-list {
     margin-top: auto;
   }
 
