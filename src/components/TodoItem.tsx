@@ -9,8 +9,6 @@ import { PRIORITY_LABELS, type Priority, type Todo } from '../types'
 
 interface TodoItemProps {
   todo: Todo
-  canMoveUp: boolean
-  canMoveDown: boolean
   rowOffset: number
   rowTransitionNone: boolean
   liStyle: CSSProperties
@@ -19,8 +17,6 @@ interface TodoItemProps {
   onToggle: (id: string) => void
   onToggleMyDay: (id: string) => void
   onDelete: (id: string) => void
-  onMoveUp: (id: string) => void
-  onMoveDown: (id: string) => void
   onUpdateMeta: (
     id: string,
     dueDate: string | undefined,
@@ -44,8 +40,6 @@ function formatDueDate(dueDate: string) {
 
 export function TodoItem({
   todo,
-  canMoveUp,
-  canMoveDown,
   rowOffset,
   rowTransitionNone,
   liStyle,
@@ -54,8 +48,6 @@ export function TodoItem({
   onToggle,
   onToggleMyDay,
   onDelete,
-  onMoveUp,
-  onMoveDown,
   onUpdateMeta,
   onRowPointerDown,
   onRowPointerMove,
@@ -111,35 +103,7 @@ export function TodoItem({
         onPointerCancel={onRowPointerUp}
       >
         <div className="todo-item-main">
-          <label onClick={onLabelClick}>
-            <input
-              type="checkbox"
-              checked={todo.completed}
-              onChange={() => onToggle(todo.id)}
-            />
-            <span className={todo.completed ? 'completed' : ''}>
-              {todo.text}
-            </span>
-          </label>
-          <div className="todo-item-actions">
-            <button
-              type="button"
-              className="reorder move-up"
-              aria-label={`Mover "${todo.text}" arriba`}
-              disabled={!canMoveUp}
-              onClick={() => onMoveUp(todo.id)}
-            >
-              ▲
-            </button>
-            <button
-              type="button"
-              className="reorder move-down"
-              aria-label={`Mover "${todo.text}" abajo`}
-              disabled={!canMoveDown}
-              onClick={() => onMoveDown(todo.id)}
-            >
-              ▼
-            </button>
+          <div className="todo-item-content">
             <button
               type="button"
               className="todo-drag-handle"
@@ -152,6 +116,18 @@ export function TodoItem({
             >
               ⠿
             </button>
+            <label onClick={onLabelClick}>
+              <input
+                type="checkbox"
+                checked={todo.completed}
+                onChange={() => onToggle(todo.id)}
+              />
+              <span className={todo.completed ? 'completed' : ''}>
+                {todo.text}
+              </span>
+            </label>
+          </div>
+          <div className="todo-item-actions">
             <button
               type="button"
               className="delete"

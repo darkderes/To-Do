@@ -120,16 +120,29 @@
 }
 
 .task-list-drag-handle {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   border: none;
   background: transparent;
   color: var(--text);
-  opacity: 0.6;
+  opacity: 0.5;
   font-size: 1.1rem;
   line-height: 1;
-  padding: 2px 8px;
+  padding: 2px 6px;
   cursor: grab;
   touch-action: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .task-list-item-row {
+    cursor: grab;
+  }
+
+  .task-list-item-row:active {
+    cursor: grabbing;
+  }
 }
 
 .task-list-rename-input {
@@ -350,6 +363,14 @@
   gap: 8px;
 }
 
+.todo-item-content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
 .todo-item label {
   display: flex;
   align-items: center;
@@ -421,26 +442,6 @@
   flex-shrink: 0;
 }
 
-.todo-item .reorder {
-  border: none;
-  background: transparent;
-  color: var(--text);
-  font-size: 0.7rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: 4px 6px;
-  opacity: 0.75;
-}
-
-.todo-item .reorder:hover:not(:disabled) {
-  opacity: 1;
-}
-
-.todo-item .reorder:disabled {
-  opacity: 0.3;
-  cursor: default;
-}
-
 .todo-item .delete {
   border: none;
   background: transparent;
@@ -452,16 +453,29 @@
 }
 
 .todo-drag-handle {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   border: none;
   background: transparent;
   color: var(--text);
-  opacity: 0.6;
+  opacity: 0.5;
   font-size: 1.1rem;
   line-height: 1;
-  padding: 2px 8px;
+  padding: 2px 6px;
   cursor: grab;
   touch-action: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .todo-item-row {
+    cursor: grab;
+  }
+
+  .todo-item-row:active {
+    cursor: grabbing;
+  }
 }
 
 .todo-item-meta {
@@ -677,17 +691,6 @@
     cursor: pointer;
   }
 
-  .task-list-move-up,
-  .task-list-move-down {
-    display: none;
-  }
-
-  .task-list-drag-handle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
   .todo-item-reveal {
     display: flex;
     position: absolute;
@@ -707,16 +710,8 @@
     cursor: pointer;
   }
 
-  .todo-item .reorder.move-up,
-  .todo-item .reorder.move-down,
   .todo-item .delete {
     display: none;
-  }
-
-  .todo-drag-handle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
   }
 
   .sidebar-settings {

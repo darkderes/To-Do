@@ -382,9 +382,9 @@ describe('App', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('reorders todos with the move up/down buttons', async () => {
-    const user = userEvent.setup()
+  it('reorders todos by dragging the row with the mouse on desktop', async () => {
     render(<App />)
+    const user = userEvent.setup()
 
     await user.type(
       screen.getByLabelText(/texto de la nueva tarea/i),
@@ -399,25 +399,51 @@ describe('App', () => {
     expect(items[0]).toHaveTextContent('Buy milk')
     expect(items[1]).toHaveTextContent('Walk dog')
 
-    await user.click(
-      screen.getByRole('button', { name: /mover "walk dog" arriba/i }),
-    )
+    const row = document.querySelectorAll('.todo-item-row')[0]
+    fireEvent.pointerDown(row, {
+      clientX: 20,
+      clientY: 10,
+      pointerId: 1,
+      pointerType: 'mouse',
+    })
+    fireEvent.pointerMove(row, {
+      clientX: 20,
+      clientY: 90,
+      pointerId: 1,
+      pointerType: 'mouse',
+    })
+    fireEvent.pointerUp(row, {
+      clientX: 20,
+      clientY: 90,
+      pointerId: 1,
+      pointerType: 'mouse',
+    })
 
     items = document.querySelectorAll('.todo-item')
     expect(items[0]).toHaveTextContent('Walk dog')
     expect(items[1]).toHaveTextContent('Buy milk')
-
-    expect(
-      screen.getByRole('button', { name: /mover "walk dog" arriba/i }),
-    ).toBeDisabled()
-    expect(
-      screen.getByRole('button', { name: /mover "buy milk" abajo/i }),
-    ).toBeDisabled()
   })
 
-  it('reorders lists with the move up/down buttons', async () => {
+  it('does not show move up/down buttons on todo items', async () => {
     const user = userEvent.setup()
     render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+
+    expect(
+      screen.queryByRole('button', { name: /mover "buy milk" arriba/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /mover "buy milk" abajo/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('reorders lists by dragging the row with the mouse on desktop', async () => {
+    render(<App />)
+    const user = userEvent.setup()
 
     await user.type(
       screen.getByLabelText(/nombre de la nueva lista/i),
@@ -430,15 +456,48 @@ describe('App', () => {
     expect(listButtons[0]).toHaveTextContent('Mis tareas')
     expect(listButtons[1]).toHaveTextContent('Work')
 
-    await user.click(
-      screen.getByRole('button', { name: /mover "work" arriba/i }),
-    )
+    const row = document.querySelectorAll('.task-list-item-row')[1]
+    fireEvent.pointerDown(row, {
+      clientX: 20,
+      clientY: 90,
+      pointerId: 1,
+      pointerType: 'mouse',
+    })
+    fireEvent.pointerMove(row, {
+      clientX: 20,
+      clientY: 10,
+      pointerId: 1,
+      pointerType: 'mouse',
+    })
+    fireEvent.pointerUp(row, {
+      clientX: 20,
+      clientY: 10,
+      pointerId: 1,
+      pointerType: 'mouse',
+    })
 
     listButtons = screen.getAllByRole('button', {
       name: /^(mis tareas|work)$/i,
     })
     expect(listButtons[0]).toHaveTextContent('Work')
     expect(listButtons[1]).toHaveTextContent('Mis tareas')
+  })
+
+  it('does not show move up/down buttons on lists', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/nombre de la nueva lista/i),
+      'Work{Enter}',
+    )
+
+    expect(
+      screen.queryByRole('button', { name: /mover "work" arriba/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /mover "work" abajo/i }),
+    ).not.toBeInTheDocument()
   })
 
   it('reveals a real delete button when swiping a mobile list row left, and removes it on tap', async () => {

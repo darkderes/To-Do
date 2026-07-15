@@ -33,6 +33,25 @@ interface ReorderDrag {
   targetIndex: number
 }
 
+interface MouseRowDrag {
+  id: string
+  startY: number
+  started: boolean
+}
+
+function computeTargetIndex(
+  rects: RowRect[],
+  draggedIndex: number,
+  deltaY: number,
+) {
+  const draggedRect = rects[draggedIndex]
+  const draggedCenter = draggedRect.top + draggedRect.height / 2 + deltaY
+  const index = rects.findIndex(
+    (rect) => draggedCenter < rect.top + rect.height,
+  )
+  return index === -1 ? rects.length - 1 : index
+}
+
 interface TaskListSidebarProps {
   lists: TaskList[]
   selectedListId: string
@@ -42,8 +61,6 @@ interface TaskListSidebarProps {
   onAdd: (name: string) => void
   onRename: (id: string, name: string) => void
   onDelete: (id: string) => void
-  onMoveUp: (id: string) => void
-  onMoveDown: (id: string) => void
   onReorderTo: (id: string, targetIndex: number) => void
   onToggleTheme: () => void
 }
@@ -57,8 +74,6 @@ export function TaskListSidebar({
   onAdd,
   onRename,
   onDelete,
-  onMoveUp,
-  onMoveDown,
   onReorderTo,
   onToggleTheme,
 }: TaskListSidebarProps) {
@@ -73,6 +88,7 @@ export function TaskListSidebar({
   const [reorderDrag, setReorderDrag] = useState<ReorderDrag | null>(null)
   const navRef = useRef<HTMLElement>(null)
   const dragRef = useRef<SwipeDrag | null>(null)
+  const mouseDragRef = useRef<MouseRowDrag | null>(null)
 
   useEffect(() => {
     if (!isOpen) return
@@ -81,11 +97,57 @@ export function TaskListSidebar({
       ?.focus()
   }, [isOpen])
 
+  function beginReorderDrag(id: string, startY: number, deltaY: number) {
+    setOpenSwipeId(null)
+    const rowEls = navRef.current?.querySelectorAll<HTMLLIElement>(
+      '.task-list-nav > li',
+    )
+    if (!rowEls) return
+    const rects: RowRect[] = Array.from(rowEls).map((el, i) => {
+      const rect = el.getBoundingClientRect()
+      return { id: lists[i].id, top: rect.top, height: rect.height }
+    })
+    const draggedIndex = lists.findIndex((list) => list.id === id)
+    if (draggedIndex === -1) return
+    setReorderDrag({
+      id,
+      draggedIndex,
+      rects,
+      startY,
+      deltaY,
+      targetIndex: computeTargetIndex(rects, draggedIndex, deltaY),
+    })
+  }
+
+  function updateReorderDrag(deltaY: number) {
+    if (!reorderDrag) return
+    setReorderDrag({
+      ...reorderDrag,
+      deltaY,
+      targetIndex: computeTargetIndex(
+        reorderDrag.rects,
+        reorderDrag.draggedIndex,
+        deltaY,
+      ),
+    })
+  }
+
+  function finishReorderDrag() {
+    if (reorderDrag && reorderDrag.targetIndex !== reorderDrag.draggedIndex) {
+      onReorderTo(reorderDrag.id, reorderDrag.targetIndex)
+    }
+    setReorderDrag(null)
+  }
+
   function handleRowPointerDown(
     event: ReactPointerEvent<HTMLDivElement>,
     id: string,
   ) {
     if (lists.length <= 1) return
+    if (event.pointerType === 'mouse') {
+      mouseDragRef.current = { id, startY: event.clientY, started: false }
+      return
+    }
     if (!window.matchMedia('(max-width: 640px)').matches) return
     dragRef.current = {
       id,
@@ -97,6 +159,21 @@ export function TaskListSidebar({
   }
 
   function handleRowPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
+    const mouseDrag = mouseDragRef.current
+    if (mouseDrag) {
+      const deltaY = event.clientY - mouseDrag.startY
+      if (!mouseDrag.started) {
+        if (Math.abs(deltaY) <= SWIPE_LOCK_THRESHOLD) return
+        mouseDrag.started = true
+        beginReorderDrag(mouseDrag.id, mouseDrag.startY, deltaY)
+        event.currentTarget.setPointerCapture?.(event.pointerId)
+        return
+      }
+      event.preventDefault()
+      updateReorderDrag(deltaY)
+      return
+    }
+
     const drag = dragRef.current
     if (!drag) return
     const deltaX = event.clientX - drag.startX
@@ -128,6 +205,18 @@ export function TaskListSidebar({
   }
 
   function handleRowPointerUp(event: ReactPointerEvent<HTMLDivElement>) {
+    const mouseDrag = mouseDragRef.current
+    if (mouseDrag) {
+      mouseDragRef.current = null
+      if (mouseDrag.started) {
+        finishReorderDrag()
+        if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId)
+        }
+      }
+      return
+    }
+
     const drag = dragRef.current
     dragRef.current = null
     if (!drag || drag.direction !== 'horizontal') return
@@ -157,28 +246,10 @@ export function TaskListSidebar({
     event: ReactPointerEvent<HTMLButtonElement>,
     id: string,
   ) {
-    event.stopPropagation()
     if (lists.length <= 1) return
     if (!window.matchMedia('(max-width: 640px)').matches) return
-    setOpenSwipeId(null)
-    const rowEls = navRef.current?.querySelectorAll<HTMLLIElement>(
-      '.task-list-nav > li',
-    )
-    if (!rowEls) return
-    const rects: RowRect[] = Array.from(rowEls).map((el, i) => {
-      const rect = el.getBoundingClientRect()
-      return { id: lists[i].id, top: rect.top, height: rect.height }
-    })
-    const draggedIndex = lists.findIndex((list) => list.id === id)
-    if (draggedIndex === -1) return
-    setReorderDrag({
-      id,
-      draggedIndex,
-      rects,
-      startY: event.clientY,
-      deltaY: 0,
-      targetIndex: draggedIndex,
-    })
+    event.stopPropagation()
+    beginReorderDrag(id, event.clientY, 0)
     event.currentTarget.setPointerCapture?.(event.pointerId)
   }
 
@@ -187,22 +258,12 @@ export function TaskListSidebar({
   ) {
     if (!reorderDrag) return
     event.preventDefault()
-    const deltaY = event.clientY - reorderDrag.startY
-    const draggedRect = reorderDrag.rects[reorderDrag.draggedIndex]
-    const draggedCenter = draggedRect.top + draggedRect.height / 2 + deltaY
-    let targetIndex = reorderDrag.rects.findIndex(
-      (rect) => draggedCenter < rect.top + rect.height,
-    )
-    if (targetIndex === -1) targetIndex = reorderDrag.rects.length - 1
-    setReorderDrag({ ...reorderDrag, deltaY, targetIndex })
+    updateReorderDrag(event.clientY - reorderDrag.startY)
   }
 
   function handleHandlePointerUp(event: ReactPointerEvent<HTMLButtonElement>) {
     if (!reorderDrag) return
-    if (reorderDrag.targetIndex !== reorderDrag.draggedIndex) {
-      onReorderTo(reorderDrag.id, reorderDrag.targetIndex)
-    }
-    setReorderDrag(null)
+    finishReorderDrag()
     if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId)
     }
@@ -332,31 +393,6 @@ export function TaskListSidebar({
                   />
                 ) : (
                   <>
-                    <button
-                      type="button"
-                      className="task-list-button"
-                      onClick={() => handleSelectClick(list.id)}
-                    >
-                      {list.name}
-                    </button>
-                    <button
-                      type="button"
-                      className="task-list-action task-list-move-up"
-                      aria-label={`Mover "${list.name}" arriba`}
-                      disabled={index === 0}
-                      onClick={() => onMoveUp(list.id)}
-                    >
-                      ▲
-                    </button>
-                    <button
-                      type="button"
-                      className="task-list-action task-list-move-down"
-                      aria-label={`Mover "${list.name}" abajo`}
-                      disabled={index === lists.length - 1}
-                      onClick={() => onMoveDown(list.id)}
-                    >
-                      ▼
-                    </button>
                     {lists.length > 1 && (
                       <button
                         type="button"
@@ -373,6 +409,13 @@ export function TaskListSidebar({
                         ⠿
                       </button>
                     )}
+                    <button
+                      type="button"
+                      className="task-list-button"
+                      onClick={() => handleSelectClick(list.id)}
+                    >
+                      {list.name}
+                    </button>
                     <button
                       type="button"
                       className="task-list-action"

@@ -151,19 +151,6 @@ function App() {
     undoQueue.dismiss(entryId)
   }
 
-  function moveList(id: string, direction: 'up' | 'down') {
-    const currentIndex = lists.findIndex((list) => list.id === id)
-    if (currentIndex === -1) return
-    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
-    if (targetIndex < 0 || targetIndex >= lists.length) return
-    const updated = [...lists]
-    ;[updated[currentIndex], updated[targetIndex]] = [
-      updated[targetIndex],
-      updated[currentIndex],
-    ]
-    setLists(updated)
-  }
-
   function reorderList(id: string, targetIndex: number) {
     const currentIndex = lists.findIndex((list) => list.id === id)
     if (currentIndex === -1 || currentIndex === targetIndex) return
@@ -193,24 +180,6 @@ function App() {
   )
 
   const activeCount = activeTodos.length
-
-  function moveWithinSubset(
-    subset: Todo[],
-    id: string,
-    direction: 'up' | 'down',
-  ) {
-    const currentIndex = subset.findIndex((todo) => todo.id === id)
-    if (currentIndex === -1) return
-    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
-    if (targetIndex < 0 || targetIndex >= subset.length) return
-    const a = subset[currentIndex]
-    const b = subset[targetIndex]
-    const aIndex = todos.findIndex((todo) => todo.id === a.id)
-    const bIndex = todos.findIndex((todo) => todo.id === b.id)
-    const updated = [...todos]
-    ;[updated[aIndex], updated[bIndex]] = [updated[bIndex], updated[aIndex]]
-    setTodos(updated)
-  }
 
   function reorderWithinSubset(subset: Todo[], id: string, targetIndex: number) {
     const currentIndex = subset.findIndex((todo) => todo.id === id)
@@ -257,8 +226,6 @@ function App() {
         onAdd={addList}
         onRename={renameList}
         onDelete={deleteList}
-        onMoveUp={(id) => moveList(id, 'up')}
-        onMoveDown={(id) => moveList(id, 'down')}
         onReorderTo={reorderList}
         onToggleTheme={toggleTheme}
       />
@@ -292,8 +259,6 @@ function App() {
           emptyMessage={activeEmptyMessage}
           onToggle={toggleTodo}
           onDelete={deleteTodo}
-          onMoveUp={(id) => moveWithinSubset(activeTodos, id, 'up')}
-          onMoveDown={(id) => moveWithinSubset(activeTodos, id, 'down')}
           onReorderTo={(id, targetIndex) =>
             reorderWithinSubset(activeTodos, id, targetIndex)
           }
@@ -318,10 +283,6 @@ function App() {
                 emptyMessage="No hay tareas completadas."
                 onToggle={toggleTodo}
                 onDelete={deleteTodo}
-                onMoveUp={(id) => moveWithinSubset(completedTodos, id, 'up')}
-                onMoveDown={(id) =>
-                  moveWithinSubset(completedTodos, id, 'down')
-                }
                 onReorderTo={(id, targetIndex) =>
                   reorderWithinSubset(completedTodos, id, targetIndex)
                 }
