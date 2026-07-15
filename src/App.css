@@ -363,6 +363,41 @@
   overflow-wrap: anywhere;
 }
 
+.todo-item label input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.todo-item label input[type='checkbox']:hover {
+  border-color: var(--accent);
+}
+
+.todo-item label input[type='checkbox']:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.todo-item label input[type='checkbox']:checked::after {
+  content: '';
+  width: 11px;
+  height: 6px;
+  border-left: 2px solid var(--on-accent);
+  border-bottom: 2px solid var(--on-accent);
+  transform: rotate(-45deg) translateY(-1px);
+}
+
 .todo-item .completed {
   text-decoration: line-through;
   color: var(--text);
