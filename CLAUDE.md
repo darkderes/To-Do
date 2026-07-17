@@ -23,6 +23,13 @@ Single-page React app, no backend. State lives entirely in `App.tsx`:
 - `components/` are presentational: `AddTodo` (controlled input + submit), `TodoList` (maps todos to items, renders empty state), `TodoItem` (checkbox + delete button). None of them touch storage directly — everything flows through the callbacks from `App.tsx`.
 - `types.ts` defines the single `Todo` shape (`id`, `text`, `completed`) shared across components.
 
+### Notes mode (Evernote-style)
+
+- The app has two sections toggled by `ModeSwitch` in the header (`appMode` in localStorage): tasks (the original UI) and notes. `components/NotesArea.tsx` owns all notes state (`notebooks`, `notes`, `selectedNotebookId` localStorage keys) and renders `NotebookSidebar` (reuses the task-sidebar CSS classes, so the mobile drawer works unchanged) plus either the note-card list or `NoteEditor`.
+- A `Note` stores `title`, plain-text `content`, and an `images` map (`imageId -> data URL`). Images pasted or picked in `NoteEditor` are downscaled via canvas (`utils/noteContent.ts: processImageFile`) and referenced in the text with `[imagen:<id>]` tokens.
+- `utils/noteContent.ts: parseNoteContent` converts content into render blocks: a URL alone on its line becomes an embed (YouTube iframe via `youtube-nocookie.com`, `<img>` for image extensions, a link card otherwise); inline URLs become anchors; tokens resolve against the `images` map (`parseNoteContent` remains for snippets/tests).
+- The editor is inline, Evernote-style: `parseEditorSegments` (same file) splits content by lines into text segments and one-line embeds; `NoteEditor` renders each text segment as an auto-growing borderless `<textarea>` with embeds (`NoteBlockView`) interleaved in the flow. The line under the caret (`excludedLine`) never converts while being typed — conversion happens on Enter/blur/caret-move. Text segments can be "virtual" (`lineCount: 0`) so you can type before/after/between embeds; caret position is restored across re-parses via a pending `{line, col}` ref. Backspace at a segment start or the ✕ button deletes the embed line (and its entry in `images` if it was a token).
+
 ### Tooling notes
 
 - ESLint uses flat config (`eslint.config.js`) with `typescript-eslint`, `eslint-plugin-react-hooks`, and `eslint-plugin-react-refresh`, plus `eslint-config-prettier` to disable formatting-related rules. Note `eslint-plugin-react-hooks`'s flat-config export lives at `reactHooks.configs.flat.recommended`, not `recommended-latest` (the latter is eslintrc-style and throws under flat config).

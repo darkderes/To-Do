@@ -30,3 +30,20 @@ export interface TaskList {
   id: string
   name: string
 }
+
+export type AppMode = 'tasks' | 'notes'
+
+export interface Notebook {
+  id: string
+  name: string
+}
+
+export interface Note {
+  id: string
+  notebookId: string
+  title: string
+  content: string
+  images: Record<string, string>
+  createdAt: number
+  updatedAt: number
+}

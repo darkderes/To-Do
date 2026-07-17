@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CaretDown, CaretUp, List, Moon, Sun } from '@phosphor-icons/react'
 import { AddTodo } from './components/AddTodo'
+import { ModeSwitch } from './components/ModeSwitch'
+import { NotesArea } from './components/NotesArea'
 import { TodoList } from './components/TodoList'
 import { TaskListSidebar } from './components/TaskListSidebar'
 import { UndoToastStack } from './components/UndoToastStack'
@@ -9,7 +11,7 @@ import { useTheme } from './hooks/useTheme'
 import { useToday } from './hooks/useToday'
 import { useUndoQueue } from './hooks/useUndoQueue'
 import { MY_DAY_ID } from './types'
-import type { Priority, TaskList, Todo } from './types'
+import type { AppMode, Priority, TaskList, Todo } from './types'
 import './App.css'
 
 const DEFAULT_LIST_ID = 'default'
@@ -33,6 +35,7 @@ function App() {
     'lastRealListId',
     DEFAULT_LIST_ID,
   )
+  const [mode, setMode] = useLocalStorage<AppMode>('appMode', 'tasks')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [showCompleted, setShowCompleted] = useState(false)
   const sidebarToggleRef = useRef<HTMLButtonElement>(null)
@@ -44,6 +47,12 @@ function App() {
   function closeSidebar() {
     setIsSidebarOpen(false)
     sidebarToggleRef.current?.focus()
+  }
+
+  function switchMode(nextMode: AppMode) {
+    if (nextMode === mode) return
+    setMode(nextMode)
+    setIsSidebarOpen(false)
   }
 
   useEffect(() => {
@@ -272,111 +281,128 @@ function App() {
           aria-hidden="true"
         />
       )}
-      <TaskListSidebar
-        lists={lists}
-        selectedListId={selectedListId}
-        isOpen={isSidebarOpen}
-        theme={theme}
-        onSelect={selectList}
-        onAdd={addList}
-        onRename={renameList}
-        onDelete={deleteList}
-        onReorderTo={reorderList}
-        onToggleTheme={toggleTheme}
-      />
-      <main className="app-content">
-        <div className="app-header">
-          <button
-            type="button"
-            className="sidebar-toggle"
-            ref={sidebarToggleRef}
-            aria-expanded={isSidebarOpen}
-            aria-controls="task-list-sidebar"
-            aria-label={`Listas de tareas, lista actual: ${selectedListName}`}
-            onClick={() => setIsSidebarOpen((open) => !open)}
-          >
-            <List aria-hidden="true" size={20} />
-          </button>
-          <h1>{selectedListName}</h1>
-        </div>
-        <button
-          type="button"
-          className="theme-toggle"
-          onClick={toggleTheme}
-          aria-label={
-            theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
-          }
-        >
-          {theme === 'dark' ? (
-            <Sun aria-hidden="true" size={18} />
-          ) : (
-            <Moon aria-hidden="true" size={18} />
-          )}
-        </button>
-        <TodoList
-          todos={activeTodos}
-          emptyMessage={activeEmptyMessage}
-          onToggle={toggleTodo}
-          onRename={renameTodo}
-          onDelete={deleteTodo}
-          onReorderTo={(id, targetIndex) =>
-            reorderWithinSubset(activeTodos, id, targetIndex)
-          }
-          onUpdateMeta={updateTodoMeta}
-          onToggleMyDay={toggleMyDay}
-          today={today}
+      {mode === 'notes' ? (
+        <NotesArea
+          isSidebarOpen={isSidebarOpen}
+          theme={theme}
+          sidebarToggleRef={sidebarToggleRef}
+          modeSwitch={<ModeSwitch mode={mode} onChange={switchMode} />}
+          onToggleSidebar={() => setIsSidebarOpen((open) => !open)}
+          onCloseSidebar={closeSidebar}
+          onToggleTheme={toggleTheme}
         />
-        {completedTodos.length > 0 && (
-          <div className="completed-section">
+      ) : (
+        <>
+          <TaskListSidebar
+            lists={lists}
+            selectedListId={selectedListId}
+            isOpen={isSidebarOpen}
+            theme={theme}
+            onSelect={selectList}
+            onAdd={addList}
+            onRename={renameList}
+            onDelete={deleteList}
+            onReorderTo={reorderList}
+            onToggleTheme={toggleTheme}
+          />
+          <main className="app-content">
+            <div className="app-header">
+              <button
+                type="button"
+                className="sidebar-toggle"
+                ref={sidebarToggleRef}
+                aria-expanded={isSidebarOpen}
+                aria-controls="task-list-sidebar"
+                aria-label={`Listas de tareas, lista actual: ${selectedListName}`}
+                onClick={() => setIsSidebarOpen((open) => !open)}
+              >
+                <List aria-hidden="true" size={20} />
+              </button>
+              <h1>{selectedListName}</h1>
+              <ModeSwitch mode={mode} onChange={switchMode} />
+            </div>
             <button
               type="button"
-              className="completed-toggle"
-              aria-expanded={showCompleted}
-              onClick={() => setShowCompleted((open) => !open)}
+              className="theme-toggle"
+              onClick={toggleTheme}
+              aria-label={
+                theme === 'dark'
+                  ? 'Cambiar a modo claro'
+                  : 'Cambiar a modo oscuro'
+              }
             >
-              <span>Completadas ({completedTodos.length})</span>
-              {showCompleted ? (
-                <CaretUp aria-hidden="true" size={16} />
+              {theme === 'dark' ? (
+                <Sun aria-hidden="true" size={18} />
               ) : (
-                <CaretDown aria-hidden="true" size={16} />
+                <Moon aria-hidden="true" size={18} />
               )}
             </button>
-            {showCompleted && (
-              <TodoList
-                todos={completedTodos}
-                emptyMessage="No hay tareas completadas."
-                onToggle={toggleTodo}
-                onRename={renameTodo}
-                onDelete={deleteTodo}
-                onReorderTo={(id, targetIndex) =>
-                  reorderWithinSubset(completedTodos, id, targetIndex)
-                }
-                onUpdateMeta={updateTodoMeta}
-                onToggleMyDay={toggleMyDay}
-                today={today}
-              />
+            <TodoList
+              todos={activeTodos}
+              emptyMessage={activeEmptyMessage}
+              onToggle={toggleTodo}
+              onRename={renameTodo}
+              onDelete={deleteTodo}
+              onReorderTo={(id, targetIndex) =>
+                reorderWithinSubset(activeTodos, id, targetIndex)
+              }
+              onUpdateMeta={updateTodoMeta}
+              onToggleMyDay={toggleMyDay}
+              today={today}
+            />
+            {completedTodos.length > 0 && (
+              <div className="completed-section">
+                <button
+                  type="button"
+                  className="completed-toggle"
+                  aria-expanded={showCompleted}
+                  onClick={() => setShowCompleted((open) => !open)}
+                >
+                  <span>Completadas ({completedTodos.length})</span>
+                  {showCompleted ? (
+                    <CaretUp aria-hidden="true" size={16} />
+                  ) : (
+                    <CaretDown aria-hidden="true" size={16} />
+                  )}
+                </button>
+                {showCompleted && (
+                  <TodoList
+                    todos={completedTodos}
+                    emptyMessage="No hay tareas completadas."
+                    onToggle={toggleTodo}
+                    onRename={renameTodo}
+                    onDelete={deleteTodo}
+                    onReorderTo={(id, targetIndex) =>
+                      reorderWithinSubset(completedTodos, id, targetIndex)
+                    }
+                    onUpdateMeta={updateTodoMeta}
+                    onToggleMyDay={toggleMyDay}
+                    today={today}
+                  />
+                )}
+              </div>
             )}
-          </div>
-        )}
-        <p className="count">
-          {activeCount}{' '}
-          {activeCount === 1 ? 'tarea pendiente' : 'tareas pendientes'}
-        </p>
-        <AddTodo onAdd={addTodo} />
-      </main>
-      <UndoToastStack
-        items={undoQueue.entries.map((entry) => ({
-          id: entry.id,
-          message:
-            entry.item.kind === 'delete'
-              ? 'Tarea eliminada'
-              : 'Tarea completada',
-          focusOnMount: entry.item.kind === 'delete',
-        }))}
-        onUndo={undoAction}
-        onPause={undoQueue.pause}
-        onResume={undoQueue.resume}
-      />
+            <p className="count">
+              {activeCount}{' '}
+              {activeCount === 1 ? 'tarea pendiente' : 'tareas pendientes'}
+            </p>
+            <AddTodo onAdd={addTodo} />
+          </main>
+          <UndoToastStack
+            items={undoQueue.entries.map((entry) => ({
+              id: entry.id,
+              message:
+                entry.item.kind === 'delete'
+                  ? 'Tarea eliminada'
+                  : 'Tarea completada',
+              focusOnMount: entry.item.kind === 'delete',
+            }))}
+            onUndo={undoAction}
+            onPause={undoQueue.pause}
+            onResume={undoQueue.resume}
+          />
+        </>
+      )}
     </div>
   )
 }
