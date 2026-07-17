@@ -30,6 +30,12 @@ Single-page React app, no backend. State lives entirely in `App.tsx`:
 - `utils/noteContent.ts: parseNoteContent` converts content into render blocks: a URL alone on its line becomes an embed (YouTube iframe via `youtube-nocookie.com`, `<img>` for image extensions, a link card otherwise); inline URLs become anchors; tokens resolve against the `images` map (`parseNoteContent` remains for snippets/tests).
 - The editor is inline, Evernote-style: `parseEditorSegments` (same file) splits content by lines into text segments and one-line embeds; `NoteEditor` renders each text segment as an auto-growing borderless `<textarea>` with embeds (`NoteBlockView`) interleaved in the flow. The line under the caret (`excludedLine`) never converts while being typed — conversion happens on Enter/blur/caret-move. Text segments can be "virtual" (`lineCount: 0`) so you can type before/after/between embeds; caret position is restored across re-parses via a pending `{line, col}` ref. Backspace at a segment start or the ✕ button deletes the embed line (and its entry in `images` if it was a token).
 
+### Cloud sync (Supabase)
+
+- Optional whole-state sync via Supabase. `src/syncConfig.ts` holds the project URL + anon key; with both empty (the default) `src/lib/supabase.ts` exports `null` and the app is fully local — the sync UI hides and tests run without network.
+- One row per user in the `app_state` table (`supabase/schema.sql`: jsonb `data` + RLS + realtime publication). `hooks/useCloudSync.ts` does: initial pull + `utils/mergeState.ts` union-by-id merge on login (notes resolved by `updatedAt`), debounced (1.5s) whole-state upsert on local changes, and a `postgres_changes` realtime subscription that applies remote payloads (echo-suppressed via a skip-push ref + JSON equality check).
+- Notes/notebooks state lives in `App.tsx` (lifted from `NotesArea` so the sync hook sees all four collections); `components/SyncPanel.tsx` (email+password auth) renders inside both sidebars' Configuración section via the `syncPanel` prop.
+
 ### Tooling notes
 
 - ESLint uses flat config (`eslint.config.js`) with `typescript-eslint`, `eslint-plugin-react-hooks`, and `eslint-plugin-react-refresh`, plus `eslint-config-prettier` to disable formatting-related rules. Note `eslint-plugin-react-hooks`'s flat-config export lives at `reactHooks.configs.flat.recommended`, not `recommended-latest` (the latter is eslintrc-style and throws under flat config).

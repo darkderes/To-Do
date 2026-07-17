@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { FormEvent, KeyboardEvent } from 'react'
+import type { FormEvent, KeyboardEvent, ReactNode } from 'react'
 import { Moon, PencilSimple, Plus, Sun, X } from '@phosphor-icons/react'
 import type { Notebook } from '../types'
 
@@ -13,6 +13,7 @@ interface NotebookSidebarProps {
   onRename: (id: string, name: string) => void
   onDelete: (id: string) => void
   onToggleTheme: () => void
+  syncPanel?: ReactNode
 }
 
 export function NotebookSidebar({
@@ -25,6 +26,7 @@ export function NotebookSidebar({
   onRename,
   onDelete,
   onToggleTheme,
+  syncPanel,
 }: NotebookSidebarProps) {
   const [newName, setNewName] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -155,6 +157,7 @@ export function NotebookSidebar({
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </span>
         </button>
+        {syncPanel}
       </div>
     </nav>
   )

@@ -1240,3 +1240,78 @@
   color: var(--danger);
   border-color: var(--danger);
 }
+
+/* ---- Panel de sincronización ---- */
+
+.sync-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.sync-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.sync-email {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sync-panel input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-h);
+  font-size: 0.9rem;
+}
+
+.sync-panel input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.sync-error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--danger);
+}
+
+.sync-submit {
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.sync-switch-mode {
+  padding: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.sync-switch-mode:hover {
+  color: var(--text-h);
+}

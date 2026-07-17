@@ -38,6 +38,11 @@ export interface Notebook {
   name: string
 }
 
+export const DEFAULT_NOTEBOOK_ID = 'notebook-default'
+export const DEFAULT_NOTEBOOKS: Notebook[] = [
+  { id: DEFAULT_NOTEBOOK_ID, name: 'Mi notebook' },
+]
+
 export interface Note {
   id: string
   notebookId: string
@@ -46,4 +51,11 @@ export interface Note {
   images: Record<string, string>
   createdAt: number
   updatedAt: number
+}
+
+export interface SyncedState {
+  taskLists: TaskList[]
+  todos: Todo[]
+  notebooks: Notebook[]
+  notes: Note[]
 }

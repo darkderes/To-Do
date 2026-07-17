@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { FormEvent, KeyboardEvent } from 'react'
+import type { FormEvent, KeyboardEvent, ReactNode } from 'react'
 import {
   DotsSixVertical,
   Moon,
@@ -23,6 +23,7 @@ interface TaskListSidebarProps {
   onDelete: (id: string) => void
   onReorderTo: (id: string, targetIndex: number) => void
   onToggleTheme: () => void
+  syncPanel?: ReactNode
 }
 
 export function TaskListSidebar({
@@ -36,6 +37,7 @@ export function TaskListSidebar({
   onDelete,
   onReorderTo,
   onToggleTheme,
+  syncPanel,
 }: TaskListSidebarProps) {
   const [newListName, setNewListName] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -247,6 +249,7 @@ export function TaskListSidebar({
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </span>
         </button>
+        {syncPanel}
       </div>
     </nav>
   )

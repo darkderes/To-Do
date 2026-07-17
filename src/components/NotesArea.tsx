@@ -1,22 +1,23 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { ReactNode, RefObject } from 'react'
+import type { Dispatch, ReactNode, RefObject, SetStateAction } from 'react'
 import { List, Moon, Plus, Sun, Trash } from '@phosphor-icons/react'
 import { NotebookSidebar } from './NotebookSidebar'
 import { NoteEditor } from './NoteEditor'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { noteSnippet } from '../utils/noteContent'
+import { DEFAULT_NOTEBOOK_ID } from '../types'
 import type { Note, Notebook } from '../types'
 
-const DEFAULT_NOTEBOOK_ID = 'notebook-default'
-const DEFAULT_NOTEBOOKS: Notebook[] = [
-  { id: DEFAULT_NOTEBOOK_ID, name: 'Mi notebook' },
-]
-
 interface NotesAreaProps {
+  notebooks: Notebook[]
+  notes: Note[]
+  setNotebooks: Dispatch<SetStateAction<Notebook[]>>
+  setNotes: Dispatch<SetStateAction<Note[]>>
   isSidebarOpen: boolean
   theme: 'light' | 'dark'
   sidebarToggleRef: RefObject<HTMLButtonElement | null>
   modeSwitch: ReactNode
+  syncPanel: ReactNode
   onToggleSidebar: () => void
   onCloseSidebar: () => void
   onToggleTheme: () => void
@@ -30,19 +31,19 @@ function formatDate(timestamp: number): string {
 }
 
 export function NotesArea({
+  notebooks,
+  notes,
+  setNotebooks,
+  setNotes,
   isSidebarOpen,
   theme,
   sidebarToggleRef,
   modeSwitch,
+  syncPanel,
   onToggleSidebar,
   onCloseSidebar,
   onToggleTheme,
 }: NotesAreaProps) {
-  const [notebooks, setNotebooks] = useLocalStorage<Notebook[]>(
-    'notebooks',
-    DEFAULT_NOTEBOOKS,
-  )
-  const [notes, setNotes] = useLocalStorage<Note[]>('notes', [])
   const [selectedNotebookId, setSelectedNotebookId] = useLocalStorage<string>(
     'selectedNotebookId',
     DEFAULT_NOTEBOOK_ID,
@@ -162,6 +163,7 @@ export function NotesArea({
         onRename={renameNotebook}
         onDelete={deleteNotebook}
         onToggleTheme={onToggleTheme}
+        syncPanel={syncPanel}
       />
       <main className="app-content">
         <div className="app-header">

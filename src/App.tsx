@@ -3,15 +3,25 @@ import { CaretDown, CaretUp, List, Moon, Sun } from '@phosphor-icons/react'
 import { AddTodo } from './components/AddTodo'
 import { ModeSwitch } from './components/ModeSwitch'
 import { NotesArea } from './components/NotesArea'
+import { SyncPanel } from './components/SyncPanel'
 import { TodoList } from './components/TodoList'
 import { TaskListSidebar } from './components/TaskListSidebar'
 import { UndoToastStack } from './components/UndoToastStack'
+import { useCloudSync } from './hooks/useCloudSync'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { useTheme } from './hooks/useTheme'
 import { useToday } from './hooks/useToday'
 import { useUndoQueue } from './hooks/useUndoQueue'
-import { MY_DAY_ID } from './types'
-import type { AppMode, Priority, TaskList, Todo } from './types'
+import { DEFAULT_NOTEBOOKS, MY_DAY_ID } from './types'
+import type {
+  AppMode,
+  Note,
+  Notebook,
+  Priority,
+  SyncedState,
+  TaskList,
+  Todo,
+} from './types'
 import './App.css'
 
 const DEFAULT_LIST_ID = 'default'
@@ -35,6 +45,11 @@ function App() {
     'lastRealListId',
     DEFAULT_LIST_ID,
   )
+  const [notebooks, setNotebooks] = useLocalStorage<Notebook[]>(
+    'notebooks',
+    DEFAULT_NOTEBOOKS,
+  )
+  const [notes, setNotes] = useLocalStorage<Note[]>('notes', [])
   const [mode, setMode] = useLocalStorage<AppMode>('appMode', 'tasks')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [showCompleted, setShowCompleted] = useState(false)
@@ -43,6 +58,24 @@ function App() {
   const { theme, toggleTheme } = useTheme()
   const today = useToday()
   const isMyDay = selectedListId === MY_DAY_ID
+
+  const syncedState = useMemo<SyncedState>(
+    () => ({ taskLists: lists, todos, notebooks, notes }),
+    [lists, todos, notebooks, notes],
+  )
+
+  function applyRemoteState(remote: SyncedState) {
+    setLists(remote.taskLists)
+    setTodos(remote.todos)
+    setNotebooks(remote.notebooks)
+    setNotes(remote.notes)
+  }
+
+  const sync = useCloudSync({
+    state: syncedState,
+    applyRemote: applyRemoteState,
+  })
+  const syncPanel = <SyncPanel sync={sync} />
 
   function closeSidebar() {
     setIsSidebarOpen(false)
@@ -283,6 +316,11 @@ function App() {
       )}
       {mode === 'notes' ? (
         <NotesArea
+          notebooks={notebooks}
+          notes={notes}
+          setNotebooks={setNotebooks}
+          setNotes={setNotes}
+          syncPanel={syncPanel}
           isSidebarOpen={isSidebarOpen}
           theme={theme}
           sidebarToggleRef={sidebarToggleRef}
@@ -304,6 +342,7 @@ function App() {
             onDelete={deleteList}
             onReorderTo={reorderList}
             onToggleTheme={toggleTheme}
+            syncPanel={syncPanel}
           />
           <main className="app-content">
             <div className="app-header">
