@@ -34,7 +34,7 @@ Single-page React app, no backend. State lives entirely in `App.tsx`:
 
 - Optional whole-state sync via Supabase. `src/syncConfig.ts` holds the project URL + anon key; with both empty (the default) `src/lib/supabase.ts` exports `null` and the app is fully local — the sync UI hides and tests run without network.
 - One row per user in the `app_state` table (`supabase/schema.sql`: jsonb `data` + RLS + realtime publication). `hooks/useCloudSync.ts` does: initial pull + `utils/mergeState.ts` union-by-id merge on login (notes resolved by `updatedAt`), debounced (1.5s) whole-state upsert on local changes, and a `postgres_changes` realtime subscription that applies remote payloads (echo-suppressed via a skip-push ref + JSON equality check).
-- Notes/notebooks state lives in `App.tsx` (lifted from `NotesArea` so the sync hook sees all four collections); `components/SyncPanel.tsx` (email+password auth) renders inside both sidebars' Configuración section via the `syncPanel` prop.
+- Notes/notebooks state lives in `App.tsx` (lifted from `NotesArea` so the sync hook sees all four collections). When sync is configured the app is login-gated: `App.tsx` renders `components/LoginScreen.tsx` (email+password sign in/up, surfaces auth errors and the confirm-email notice) until there is a session; `components/SyncPanel.tsx` in both sidebars' Configuración shows status + sign-out only. `lib/supabase.ts` forces `null` under `MODE === 'test'` so the suite never hits the gate or the network.
 
 ### Tooling notes
 

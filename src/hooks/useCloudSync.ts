@@ -15,10 +15,12 @@ const PUSH_DEBOUNCE_MS = 1500
 
 export function useCloudSync({ state, applyRemote }: CloudSyncArgs) {
   const [session, setSession] = useState<Session | null>(null)
+  const [authReady, setAuthReady] = useState(supabase === null)
   const [opStatus, setStatus] = useState<'syncing' | 'synced' | 'error'>(
     'syncing',
   )
   const [authError, setAuthError] = useState<string | null>(null)
+  const [authNotice, setAuthNotice] = useState<string | null>(null)
   const stateRef = useRef(state)
   const skipPushRef = useRef(false)
   const initializedRef = useRef(false)
@@ -36,7 +38,10 @@ export function useCloudSync({ state, applyRemote }: CloudSyncArgs) {
 
   useEffect(() => {
     if (!supabase) return
-    void supabase.auth.getSession().then(({ data }) => setSession(data.session))
+    void supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+      setAuthReady(true)
+    })
     const { data: subscription } = supabase.auth.onAuthStateChange(
       (_event, nextSession) => setSession(nextSession),
     )
@@ -134,6 +139,7 @@ export function useCloudSync({ state, applyRemote }: CloudSyncArgs) {
   async function signIn(email: string, password: string) {
     if (!supabase) return
     setAuthError(null)
+    setAuthNotice(null)
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -144,8 +150,15 @@ export function useCloudSync({ state, applyRemote }: CloudSyncArgs) {
   async function signUp(email: string, password: string) {
     if (!supabase) return
     setAuthError(null)
-    const { error } = await supabase.auth.signUp({ email, password })
-    if (error) setAuthError(translateAuthError(error.message))
+    setAuthNotice(null)
+    const { data, error } = await supabase.auth.signUp({ email, password })
+    if (error) {
+      setAuthError(translateAuthError(error.message))
+    } else if (!data.session) {
+      setAuthNotice(
+        'Cuenta creada. Revisa tu correo y confirma el email antes de entrar.',
+      )
+    }
   }
 
   async function signOut() {
@@ -156,8 +169,10 @@ export function useCloudSync({ state, applyRemote }: CloudSyncArgs) {
   return {
     enabled: supabase !== null,
     status,
+    authReady,
     email: session?.user.email ?? null,
     authError,
+    authNotice,
     signIn,
     signUp,
     signOut,

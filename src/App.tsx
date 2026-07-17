@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CaretDown, CaretUp, List, Moon, Sun } from '@phosphor-icons/react'
 import { AddTodo } from './components/AddTodo'
+import { LoginScreen } from './components/LoginScreen'
 import { ModeSwitch } from './components/ModeSwitch'
 import { NotesArea } from './components/NotesArea'
 import { SyncPanel } from './components/SyncPanel'
@@ -304,6 +305,18 @@ function App() {
         ? 'Nada marcado para hoy — usa la estrella en cualquier tarea.'
         : 'Aún no hay tareas — añade una abajo.'
       : 'No hay tareas activas — ¡todo al día!'
+
+  if (sync.enabled && !sync.authReady) {
+    return (
+      <div className="login-screen">
+        <p className="login-loading">Cargando…</p>
+      </div>
+    )
+  }
+
+  if (sync.enabled && !sync.email) {
+    return <LoginScreen sync={sync} />
+  }
 
   return (
     <div className="app">
