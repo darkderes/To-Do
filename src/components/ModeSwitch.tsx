@@ -17,6 +17,7 @@ export function ModeSwitch({ mode, onChange }: ModeSwitchProps) {
         type="button"
         className={mode === 'tasks' ? 'active' : ''}
         aria-pressed={mode === 'tasks'}
+        title="Tareas"
         onClick={() => onChange('tasks')}
       >
         <CheckSquare aria-hidden="true" size={16} />
@@ -26,6 +27,7 @@ export function ModeSwitch({ mode, onChange }: ModeSwitchProps) {
         type="button"
         className={mode === 'notes' ? 'active' : ''}
         aria-pressed={mode === 'notes'}
+        title="Notas"
         onClick={() => onChange('notes')}
       >
         <Notebook aria-hidden="true" size={16} />

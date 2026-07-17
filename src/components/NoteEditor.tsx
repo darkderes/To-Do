@@ -23,6 +23,11 @@ interface NoteEditorProps {
   onBack: () => void
   onChange: (id: string, patch: Partial<Note>) => void
   onDelete: (id: string) => void
+  onContentSnapshot: (
+    id: string,
+    content: string,
+    images: Record<string, string>,
+  ) => void
 }
 
 interface CaretPosition {
@@ -58,9 +63,12 @@ export function NoteEditor({
   onBack,
   onChange,
   onDelete,
+  onContentSnapshot,
 }: NoteEditorProps) {
   const images = useMemo(() => note.images ?? {}, [note.images])
   const [excludedLine, setExcludedLine] = useState<number | null>(null)
+  const [processingImage, setProcessingImage] = useState(false)
+  const [editorError, setEditorError] = useState<string | null>(null)
   const pendingCaretRef = useRef<CaretPosition | null>(null)
   const lastCaretRef = useRef<CaretPosition | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -173,6 +181,7 @@ export function NoteEditor({
   }
 
   function removeEmbed(segment: Extract<EditorSegment, { kind: 'embed' }>) {
+    onContentSnapshot(note.id, note.content, images)
     const newLines = lines.filter((_, index) => index !== segment.line)
     const previousLine = Math.max(0, segment.line - 1)
     pendingCaretRef.current = {
@@ -215,12 +224,16 @@ export function NoteEditor({
   }
 
   async function addImageFile(file: File) {
+    setEditorError(null)
+    setProcessingImage(true)
     try {
       insertImageToken(await processImageFile(file))
     } catch (error) {
-      window.alert(
+      setEditorError(
         error instanceof Error ? error.message : IMAGE_TOO_LARGE_MESSAGE,
       )
+    } finally {
+      setProcessingImage(false)
     }
   }
 
@@ -252,8 +265,7 @@ export function NoteEditor({
   }
 
   function handleDelete() {
-    const confirmed = window.confirm(`¿Eliminar la nota "${displayTitle}"?`)
-    if (confirmed) onDelete(note.id)
+    onDelete(note.id)
   }
 
   let textIndex = 0
@@ -353,6 +365,16 @@ export function NoteEditor({
           )
         })}
       </div>
+      {processingImage && (
+        <p className="note-editor-status" role="status">
+          Procesando imagen…
+        </p>
+      )}
+      {editorError && (
+        <p className="note-editor-error" role="alert">
+          {editorError}
+        </p>
+      )}
     </section>
   )
 }
@@ -387,7 +409,7 @@ function TextSegmentArea({
   return (
     <textarea
       ref={ref}
-      className="note-segment"
+      className={`note-segment${value === '' && !placeholder ? ' note-segment-empty' : ''}`}
       value={value}
       rows={1}
       aria-label={ariaLabel}

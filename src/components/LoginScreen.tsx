@@ -12,11 +12,13 @@ export function LoginScreen({ sync }: LoginScreenProps) {
   const [password, setPassword] = useState('')
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [submitting, setSubmitting] = useState(false)
+  const [localError, setLocalError] = useState<string | null>(null)
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     const trimmedEmail = email.trim()
     if (!trimmedEmail || !password || submitting) return
+    setLocalError(null)
     setSubmitting(true)
     if (mode === 'signin') await sync.signIn(trimmedEmail, password)
     else await sync.signUp(trimmedEmail, password)
@@ -41,6 +43,7 @@ export function LoginScreen({ sync }: LoginScreenProps) {
           placeholder="Email"
           aria-label="Email"
           autoComplete="email"
+          autoFocus
           required
           onChange={(event) => setEmail(event.target.value)}
         />
@@ -54,9 +57,9 @@ export function LoginScreen({ sync }: LoginScreenProps) {
           minLength={6}
           onChange={(event) => setPassword(event.target.value)}
         />
-        {sync.authError && (
+        {(localError ?? sync.authError) && (
           <p className="login-error" role="alert">
-            {sync.authError}
+            {localError ?? sync.authError}
           </p>
         )}
         {sync.authNotice && (
@@ -80,7 +83,26 @@ export function LoginScreen({ sync }: LoginScreenProps) {
             ? '¿No tienes cuenta? Crear una'
             : '¿Ya tienes cuenta? Entrar'}
         </button>
+        {mode === 'signin' && (
+          <button
+            type="button"
+            className="login-switch-mode"
+            onClick={() => void handleForgotPassword()}
+          >
+            ¿Olvidaste tu contraseña?
+          </button>
+        )}
       </form>
     </div>
   )
+
+  async function handleForgotPassword() {
+    const trimmedEmail = email.trim()
+    if (!trimmedEmail) {
+      setLocalError('Escribe tu email arriba y vuelve a pulsar el enlace.')
+      return
+    }
+    setLocalError(null)
+    await sync.resetPassword(trimmedEmail)
+  }
 }

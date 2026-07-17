@@ -117,8 +117,7 @@ describe('Notes', () => {
     )
   })
 
-  it('deletes a note from the list after confirming', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
+  it('deletes a note without a native dialog and restores it via the undo toast', async () => {
     const user = userEvent.setup()
     window.localStorage.setItem('appMode', JSON.stringify('notes'))
     window.localStorage.setItem(
@@ -142,7 +141,82 @@ describe('Notes', () => {
     )
 
     expect(screen.queryByText('Borrable')).not.toBeInTheDocument()
-    expect(screen.getByText(/aún no hay notas/i)).toBeInTheDocument()
+    expect(screen.getByText('Nota eliminada')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /deshacer/i }))
+
+    expect(screen.getByText('Borrable')).toBeInTheDocument()
+  })
+
+  it('filters notes with the search input', async () => {
+    const user = userEvent.setup()
+    window.localStorage.setItem('appMode', JSON.stringify('notes'))
+    window.localStorage.setItem(
+      'notes',
+      JSON.stringify([
+        {
+          id: 'n1',
+          notebookId: 'notebook-default',
+          title: 'Receta de pan',
+          content: 'harina y agua',
+          images: {},
+          createdAt: 1,
+          updatedAt: 1,
+        },
+        {
+          id: 'n2',
+          notebookId: 'notebook-default',
+          title: 'Viaje',
+          content: 'Kioto en otoño',
+          images: {},
+          createdAt: 2,
+          updatedAt: 2,
+        },
+      ]),
+    )
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/buscar notas/i), 'kioto')
+
+    expect(screen.getByText('Viaje')).toBeInTheDocument()
+    expect(screen.queryByText('Receta de pan')).not.toBeInTheDocument()
+
+    await user.clear(screen.getByLabelText(/buscar notas/i))
+    await user.type(screen.getByLabelText(/buscar notas/i), 'zzz')
+
+    expect(screen.getByText(/sin resultados para «zzz»/i)).toBeInTheDocument()
+  })
+
+  it('restores a removed embed via the undo toast', async () => {
+    const user = userEvent.setup()
+    window.localStorage.setItem('appMode', JSON.stringify('notes'))
+    window.localStorage.setItem(
+      'notes',
+      JSON.stringify([
+        {
+          id: 'n1',
+          notebookId: 'notebook-default',
+          title: 'Con video',
+          content: 'hola\nhttps://youtu.be/dQw4w9WgXcQ',
+          images: {},
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      ]),
+    )
+    render(<App />)
+
+    await user.click(screen.getByText('Con video'))
+    await user.click(
+      screen.getByRole('button', { name: /quitar vista previa/i }),
+    )
+
+    expect(screen.queryByTitle('Video de YouTube')).not.toBeInTheDocument()
+    expect(screen.getByText('Elemento quitado')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /deshacer/i }))
+
+    expect(screen.getByTitle('Video de YouTube')).toBeInTheDocument()
   })
 
   it('creates a second notebook and keeps notes scoped per notebook', async () => {

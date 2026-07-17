@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react'
-import { Moon, PencilSimple, Plus, Sun, X } from '@phosphor-icons/react'
+import {
+  DotsSixVertical,
+  Moon,
+  PencilSimple,
+  Plus,
+  Sun,
+  X,
+} from '@phosphor-icons/react'
+import { useRowDrag } from '../hooks/useRowDrag'
 import type { Notebook } from '../types'
 
 interface NotebookSidebarProps {
@@ -12,6 +20,7 @@ interface NotebookSidebarProps {
   onAdd: (name: string) => void
   onRename: (id: string, name: string) => void
   onDelete: (id: string) => void
+  onReorderTo: (id: string, targetIndex: number) => void
   onToggleTheme: () => void
   syncPanel?: ReactNode
 }
@@ -25,6 +34,7 @@ export function NotebookSidebar({
   onAdd,
   onRename,
   onDelete,
+  onReorderTo,
   onToggleTheme,
   syncPanel,
 }: NotebookSidebarProps) {
@@ -32,6 +42,13 @@ export function NotebookSidebar({
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
   const navRef = useRef<HTMLElement>(null)
+  const drag = useRowDrag({
+    ids: notebooks.map((notebook) => notebook.id),
+    containerRef: navRef,
+    rowSelector: '.task-list-nav > li',
+    onReorderTo,
+    isDragEnabled: notebooks.length > 1,
+  })
 
   useEffect(() => {
     if (!isOpen) return
@@ -39,6 +56,19 @@ export function NotebookSidebar({
       ?.querySelector<HTMLButtonElement>('.task-list-nav .task-list-button')
       ?.focus()
   }, [isOpen])
+
+  function handleSelectClick(id: string) {
+    if (drag.openSwipeId) {
+      drag.setOpenSwipeId(null)
+      return
+    }
+    onSelect(id)
+  }
+
+  function handleSwipeDelete(id: string) {
+    drag.setOpenSwipeId(null)
+    onDelete(id)
+  }
 
   function handleAddSubmit(event: FormEvent) {
     event.preventDefault()
@@ -67,6 +97,18 @@ export function NotebookSidebar({
     if (event.key === 'Escape') setEditingId(null)
   }
 
+  function handleReorderKeyDown(
+    event: KeyboardEvent<HTMLButtonElement>,
+    index: number,
+    id: string,
+  ) {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return
+    event.preventDefault()
+    const target = index + (event.key === 'ArrowUp' ? -1 : 1)
+    if (target < 0 || target >= notebooks.length) return
+    onReorderTo(id, target)
+  }
+
   return (
     <nav
       id="task-list-sidebar"
@@ -75,12 +117,42 @@ export function NotebookSidebar({
       aria-label="Notebooks"
     >
       <ul className="task-list-nav">
-        {notebooks.map((notebook) => (
+        {notebooks.map((notebook, index) => (
           <li
             key={notebook.id}
             className={notebook.id === selectedNotebookId ? 'active' : ''}
+            style={drag.getItemStyle(index, notebook.id)}
           >
-            <div className="task-list-item-row">
+            {notebooks.length > 1 && (
+              <div className="task-list-item-reveal">
+                <button
+                  type="button"
+                  className="task-list-swipe-delete"
+                  aria-label={`Quitar notebook "${notebook.name}"`}
+                  onClick={() => handleSwipeDelete(notebook.id)}
+                >
+                  Eliminar
+                </button>
+              </div>
+            )}
+            <div
+              className="task-list-item-row"
+              style={{
+                transform: `translateX(${drag.getRowOffset(notebook.id)}px)`,
+                transition: drag.isSwipeDragging(notebook.id)
+                  ? 'none'
+                  : undefined,
+                touchAction: drag.isReorderActive(notebook.id)
+                  ? 'none'
+                  : undefined,
+              }}
+              onPointerDown={(event) =>
+                drag.handleRowPointerDown(event, notebook.id)
+              }
+              onPointerMove={drag.handleRowPointerMove}
+              onPointerUp={drag.handleRowPointerUp}
+              onPointerCancel={drag.handleRowPointerUp}
+            >
               {editingId === notebook.id ? (
                 <input
                   type="text"
@@ -94,10 +166,22 @@ export function NotebookSidebar({
                 />
               ) : (
                 <>
+                  {notebooks.length > 1 && (
+                    <button
+                      type="button"
+                      className="task-list-drag-handle"
+                      aria-label={`Reordenar notebook "${notebook.name}" (flechas arriba/abajo)`}
+                      onKeyDown={(event) =>
+                        handleReorderKeyDown(event, index, notebook.id)
+                      }
+                    >
+                      <DotsSixVertical aria-hidden="true" size={18} />
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="task-list-button"
-                    onClick={() => onSelect(notebook.id)}
+                    onClick={() => handleSelectClick(notebook.id)}
                   >
                     {notebook.name}
                   </button>

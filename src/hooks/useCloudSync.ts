@@ -16,6 +16,7 @@ const PUSH_DEBOUNCE_MS = 1500
 export function useCloudSync({ state, applyRemote }: CloudSyncArgs) {
   const [session, setSession] = useState<Session | null>(null)
   const [authReady, setAuthReady] = useState(supabase === null)
+  const [recoveryMode, setRecoveryMode] = useState(false)
   const [opStatus, setStatus] = useState<'syncing' | 'synced' | 'error'>(
     'syncing',
   )
@@ -43,7 +44,10 @@ export function useCloudSync({ state, applyRemote }: CloudSyncArgs) {
       setAuthReady(true)
     })
     const { data: subscription } = supabase.auth.onAuthStateChange(
-      (_event, nextSession) => setSession(nextSession),
+      (event, nextSession) => {
+        setSession(nextSession)
+        if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true)
+      },
     )
     return () => subscription.subscription.unsubscribe()
   }, [])
@@ -166,16 +170,46 @@ export function useCloudSync({ state, applyRemote }: CloudSyncArgs) {
     await supabase.auth.signOut()
   }
 
+  async function resetPassword(email: string) {
+    if (!supabase) return
+    setAuthError(null)
+    setAuthNotice(null)
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + import.meta.env.BASE_URL,
+    })
+    if (error) setAuthError(translateAuthError(error.message))
+    else
+      setAuthNotice(
+        'Te enviamos un correo con un enlace para restablecer la contraseña.',
+      )
+  }
+
+  async function updatePassword(password: string) {
+    if (!supabase) return
+    setAuthError(null)
+    const { error } = await supabase.auth.updateUser({ password })
+    if (error) setAuthError(translateAuthError(error.message))
+    else setRecoveryMode(false)
+  }
+
+  function retry() {
+    if (userId) void pushNow(stateRef.current, userId)
+  }
+
   return {
     enabled: supabase !== null,
     status,
     authReady,
+    recoveryMode,
     email: session?.user.email ?? null,
     authError,
     authNotice,
     signIn,
     signUp,
     signOut,
+    resetPassword,
+    updatePassword,
+    retry,
   }
 }
 

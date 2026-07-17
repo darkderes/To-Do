@@ -3,6 +3,7 @@ import { CaretDown, CaretUp, List, Moon, Sun } from '@phosphor-icons/react'
 import { AddTodo } from './components/AddTodo'
 import { LoginScreen } from './components/LoginScreen'
 import { ModeSwitch } from './components/ModeSwitch'
+import { ResetPasswordScreen } from './components/ResetPasswordScreen'
 import { NotesArea } from './components/NotesArea'
 import { SyncPanel } from './components/SyncPanel'
 import { TodoList } from './components/TodoList'
@@ -312,6 +313,10 @@ function App() {
         <p className="login-loading">Cargando…</p>
       </div>
     )
+  }
+
+  if (sync.enabled && sync.recoveryMode) {
+    return <ResetPasswordScreen sync={sync} />
   }
 
   if (sync.enabled && !sync.email) {

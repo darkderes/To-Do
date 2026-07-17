@@ -1,5 +1,6 @@
 :root {
   --text: #6b6375;
+  --text-muted: #726b7c;
   --text-h: #08060d;
   --bg: #fff;
   --border: #e5e4e7;
@@ -29,6 +30,7 @@
 :root[data-theme='dark'] {
   color-scheme: dark;
   --text: #9ca3af;
+  --text-muted: #8b93a1;
   --text-h: #f3f4f6;
   --bg: #16171d;
   --border: #2e303a;
@@ -46,6 +48,12 @@
 
 body {
   margin: 0;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
 }
 
 h1 {

@@ -34,6 +34,11 @@ export function SyncPanel({ sync }: SyncPanelProps) {
       <p className="sync-email" title={sync.email}>
         {sync.email}
       </p>
+      {sync.status === 'error' && (
+        <button type="button" className="sync-retry" onClick={sync.retry}>
+          Reintentar
+        </button>
+      )}
       <button
         type="button"
         className="sidebar-settings-item"

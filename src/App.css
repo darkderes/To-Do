@@ -975,7 +975,7 @@
 
 .note-card-date {
   font-size: 0.8rem;
-  opacity: 0.7;
+  color: var(--text-muted);
 }
 
 .note-card-delete {
@@ -1038,6 +1038,7 @@
   box-sizing: border-box;
   padding: 4px 0;
   border: none;
+  border-bottom: 1px solid transparent;
   background: transparent;
   color: var(--text-h);
   font-family: var(--sans);
@@ -1047,13 +1048,13 @@
 
 .note-title-input:focus {
   outline: none;
-  border-bottom: 1px solid var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 .note-updated {
   margin: 4px 0 16px;
   font-size: 0.8rem;
-  opacity: 0.7;
+  color: var(--text-muted);
 }
 
 /* ---- Contenido renderizado de la nota ---- */
@@ -1083,7 +1084,7 @@
   border: 1px dashed var(--border);
   border-radius: 8px;
   font-size: 0.9rem;
-  opacity: 0.7;
+  color: var(--text-muted);
 }
 
 .note-video {
@@ -1130,7 +1131,7 @@
 
 .note-link-url {
   font-size: 0.8rem;
-  opacity: 0.7;
+  color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1264,7 +1265,7 @@
 .sync-email {
   margin: 0;
   font-size: 0.8rem;
-  opacity: 0.7;
+  color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1369,4 +1370,81 @@
 
 .login-switch-mode:hover {
   color: var(--text-h);
+}
+
+.note-segment-empty {
+  min-height: 28px;
+  border-radius: 4px;
+}
+
+.note-segment-empty:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+/* 7. Estado de imagen en proceso y errores del editor */
+.note-editor-status {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.note-editor-error {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: var(--danger);
+}
+
+/* 8. Reintentar sync */
+.sync-retry {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-h);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.sync-retry:hover {
+  border-color: var(--accent);
+}
+
+/* 9. Buscador de notas */
+.notes-search {
+  margin-bottom: 12px;
+}
+
+.notes-search input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px 10px 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-h);
+  font-size: 0.95rem;
+}
+
+.notes-search input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+@media (max-width: 640px) {
+  /* 2. Targets tactiles de 44px en superficies de notas */
+  .note-embed-remove {
+    width: 44px;
+    height: 44px;
+  }
+
+  .note-card-delete {
+    width: 44px;
+    height: 44px;
+    top: 4px;
+    right: 4px;
+  }
+
+  .note-segment-empty {
+    min-height: 40px;
+  }
 }
