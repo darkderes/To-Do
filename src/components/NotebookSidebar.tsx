@@ -198,22 +198,24 @@ export function NotebookSidebar({
           </li>
         ))}
       </ul>
-      <form className="add-list" onSubmit={handleAddSubmit}>
-        <div className="input-with-icon">
-          <span className="input-icon" aria-hidden="true">
-            <Plus size={16} weight="bold" />
-          </span>
-          <input
-            type="text"
-            value={newName}
-            onChange={(event) => setNewName(event.target.value)}
-            placeholder="Nuevo notebook"
-            aria-label="Nombre del nuevo notebook"
-          />
-        </div>
-        <button type="submit">Añadir notebook</button>
-      </form>
-      {userMenu}
+      <div className="sidebar-bottom">
+        <form className="add-list" onSubmit={handleAddSubmit}>
+          <div className="input-with-icon">
+            <span className="input-icon" aria-hidden="true">
+              <Plus size={16} weight="bold" />
+            </span>
+            <input
+              type="text"
+              value={newName}
+              onChange={(event) => setNewName(event.target.value)}
+              placeholder="Nuevo notebook"
+              aria-label="Nombre del nuevo notebook"
+            />
+          </div>
+          <button type="submit">Añadir notebook</button>
+        </form>
+        {userMenu}
+      </div>
     </nav>
   )
 }

@@ -182,6 +182,12 @@
   pointer-events: none;
 }
 
+.sidebar-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .add-list {
   display: flex;
   flex-direction: column;
@@ -830,13 +836,16 @@
 
   .user-menu--sidebar {
     display: block;
-    margin-top: auto;
     padding-top: 16px;
     border-top: 1px solid var(--border);
   }
 
   .user-menu--header {
     display: none;
+  }
+
+  .sidebar-bottom {
+    margin-top: auto;
   }
 
   .todo-item-row {
@@ -904,10 +913,6 @@
 
   .todo-item .delete {
     display: none;
-  }
-
-  .add-list {
-    margin-top: auto;
   }
 
   .sidebar-backdrop {
