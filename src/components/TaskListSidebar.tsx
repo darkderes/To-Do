@@ -20,7 +20,8 @@ interface TaskListSidebarProps {
   onRename: (id: string, name: string) => void
   onDelete: (id: string) => void
   onReorderTo: (id: string, targetIndex: number) => void
-  userMenu?: ReactNode
+  userMenuTop?: ReactNode
+  modeSwitch?: ReactNode
 }
 
 export function TaskListSidebar({
@@ -32,7 +33,8 @@ export function TaskListSidebar({
   onRename,
   onDelete,
   onReorderTo,
-  userMenu,
+  userMenuTop,
+  modeSwitch,
 }: TaskListSidebarProps) {
   const [newListName, setNewListName] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -112,6 +114,7 @@ export function TaskListSidebar({
       className={`task-list-sidebar${isOpen ? ' open' : ''}`}
       aria-label="Listas de tareas"
     >
+      {userMenuTop && <div className="sidebar-top-profile">{userMenuTop}</div>}
       <ul className="my-day-nav">
         <li className={selectedListId === MY_DAY_ID ? 'active' : ''}>
           <button
@@ -228,7 +231,9 @@ export function TaskListSidebar({
           </div>
           <button type="submit">Añadir lista</button>
         </form>
-        {userMenu}
+        {modeSwitch && (
+          <div className="sidebar-mode-switch">{modeSwitch}</div>
+        )}
       </div>
     </nav>
   )

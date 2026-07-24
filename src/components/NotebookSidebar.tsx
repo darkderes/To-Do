@@ -13,7 +13,8 @@ interface NotebookSidebarProps {
   onRename: (id: string, name: string) => void
   onDelete: (id: string) => void
   onReorderTo: (id: string, targetIndex: number) => void
-  userMenu?: ReactNode
+  userMenuTop?: ReactNode
+  modeSwitch?: ReactNode
 }
 
 export function NotebookSidebar({
@@ -25,7 +26,8 @@ export function NotebookSidebar({
   onRename,
   onDelete,
   onReorderTo,
-  userMenu,
+  userMenuTop,
+  modeSwitch,
 }: NotebookSidebarProps) {
   const [newName, setNewName] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -105,6 +107,7 @@ export function NotebookSidebar({
       className={`task-list-sidebar${isOpen ? ' open' : ''}`}
       aria-label="Notebooks"
     >
+      {userMenuTop && <div className="sidebar-top-profile">{userMenuTop}</div>}
       <ul className="task-list-nav">
         {notebooks.map((notebook, index) => (
           <li
@@ -214,7 +217,9 @@ export function NotebookSidebar({
           </div>
           <button type="submit">Añadir notebook</button>
         </form>
-        {userMenu}
+        {modeSwitch && (
+          <div className="sidebar-mode-switch">{modeSwitch}</div>
+        )}
       </div>
     </nav>
   )

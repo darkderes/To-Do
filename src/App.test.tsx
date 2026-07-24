@@ -58,14 +58,10 @@ describe('App', () => {
     expect(screen.getByText(/aún no hay tareas/i)).toBeInTheDocument()
   })
 
-  // El avatar se renderiza dos veces (sidebar para el drawer mobile, header
-  // para desktop) y ambos quedan en el DOM en jsdom, que no evalúa media
-  // queries; el orden de aparición es estable: sidebar primero, header después.
-  function getUserMenuTrigger(placement: 'sidebar' | 'header') {
-    const triggers = screen.getAllByRole('button', {
+  function getUserMenuTrigger() {
+    return screen.getByRole('button', {
       name: /perfil y configuración/i,
     })
-    return triggers[placement === 'sidebar' ? 0 : 1]
   }
 
   it('toggles between light and dark theme and persists the choice', async () => {
@@ -74,7 +70,7 @@ describe('App', () => {
 
     expect(document.documentElement.dataset.theme).toBe('light')
 
-    await user.click(getUserMenuTrigger('header'))
+    await user.click(getUserMenuTrigger())
     await user.click(
       screen.getByRole('button', { name: /activar modo oscuro/i }),
     )
@@ -96,7 +92,7 @@ describe('App', () => {
     render(<App />)
 
     expect(document.documentElement.dataset.theme).toBe('dark')
-    await user.click(getUserMenuTrigger('header'))
+    await user.click(getUserMenuTrigger())
     expect(
       screen.getByRole('button', { name: /activar modo claro/i }),
     ).toBeInTheDocument()
@@ -109,7 +105,7 @@ describe('App', () => {
     await user.click(
       screen.getByRole('button', { name: /listas de tareas, lista actual/i }),
     )
-    await user.click(getUserMenuTrigger('sidebar'))
+    await user.click(getUserMenuTrigger())
     await user.click(
       screen.getByRole('button', { name: /activar modo oscuro/i }),
     )
@@ -125,7 +121,7 @@ describe('App', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(getUserMenuTrigger('header'))
+    await user.click(getUserMenuTrigger())
     await user.click(screen.getByRole('button', { name: /^azul$/i }))
 
     expect(window.localStorage.getItem('accentColor')).toBe('blue')

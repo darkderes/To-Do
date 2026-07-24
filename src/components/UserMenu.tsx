@@ -47,10 +47,7 @@ export function UserMenu({
   useEffect(() => {
     if (!open) return
     function handlePointerDown(event: MouseEvent) {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(event.target as Node)
-      ) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setOpen(false)
       }
     }
@@ -87,7 +84,6 @@ export function UserMenu({
         className={`user-menu-trigger user-menu-trigger--${placement}`}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={placement === 'header' ? 'Perfil y configuración' : undefined}
         onClick={() => setOpen((value) => !value)}
       >
         <span className="user-menu-trigger-avatar" aria-hidden="true">
@@ -97,11 +93,9 @@ export function UserMenu({
             <UserCircle size={20} />
           )}
         </span>
-        {placement === 'sidebar' && (
-          <span className="user-menu-trigger-label">
-            {showAccount ? sync.email : 'Perfil y configuración'}
-          </span>
-        )}
+        <span className="user-menu-trigger-label">
+          {showAccount ? sync.email : 'Perfil y configuración'}
+        </span>
       </button>
       {open && (
         <div

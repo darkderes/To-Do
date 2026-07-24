@@ -26,9 +26,8 @@ interface NotesAreaProps {
   setNotes: Dispatch<SetStateAction<Note[]>>
   isSidebarOpen: boolean
   sidebarToggleRef: RefObject<HTMLButtonElement | null>
+  userMenuTop: ReactNode
   modeSwitch: ReactNode
-  userMenu: ReactNode
-  userMenuHeader: ReactNode
   onToggleSidebar: () => void
   onCloseSidebar: () => void
 }
@@ -47,9 +46,8 @@ export function NotesArea({
   setNotes,
   isSidebarOpen,
   sidebarToggleRef,
+  userMenuTop,
   modeSwitch,
-  userMenu,
-  userMenuHeader,
   onToggleSidebar,
   onCloseSidebar,
 }: NotesAreaProps) {
@@ -230,7 +228,8 @@ export function NotesArea({
         onRename={renameNotebook}
         onDelete={deleteNotebook}
         onReorderTo={reorderNotebook}
-        userMenu={userMenu}
+        userMenuTop={userMenuTop}
+        modeSwitch={modeSwitch}
       />
       <main className="app-content">
         <div className="app-header">
@@ -246,10 +245,6 @@ export function NotesArea({
             <List aria-hidden="true" size={20} />
           </button>
           <h1>{selectedNotebook?.name ?? ''}</h1>
-          <div className="app-header-actions">
-            {modeSwitch}
-            {userMenuHeader}
-          </div>
         </div>
         {activeNote ? (
           <NoteEditor

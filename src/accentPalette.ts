@@ -17,6 +17,12 @@ export const ACCENT_PALETTE: AccentOption[] = [
   { id: 'orange', label: 'Naranja', light: '#c2410c', dark: '#fb923c' },
   { id: 'rose', label: 'Rosa', light: '#e11d48', dark: '#fb7185' },
   { id: 'pink', label: 'Fucsia', light: '#db2777', dark: '#f472b6' },
+  { id: 'cyan', label: 'Cian', light: '#0e7490', dark: '#22d3ee' },
+  { id: 'yellow', label: 'Amarillo', light: '#a16207', dark: '#facc15' },
+  { id: 'lime', label: 'Lima', light: '#4d7c0f', dark: '#a3e635' },
+  { id: 'red', label: 'Rojo', light: '#b91c1c', dark: '#f87171' },
+  { id: 'slate', label: 'Gris', light: '#475569', dark: '#94a3b8' },
+  { id: 'stone', label: 'Marrón', light: '#57534e', dark: '#a8a29e' },
 ]
 
 export const DEFAULT_ACCENT_ID = 'purple'

@@ -90,18 +90,6 @@ function App() {
     setProfile({ avatar: dataUrl, avatarUpdatedAt: Date.now() })
   }
 
-  const userMenu = (
-    <UserMenu
-      sync={sync}
-      profile={profile}
-      onAvatarChange={updateAvatar}
-      theme={theme}
-      onToggleTheme={toggleTheme}
-      accentId={accentId}
-      onAccentChange={setAccentId}
-      placement="sidebar"
-    />
-  )
   const userMenuHeader = (
     <UserMenu
       sync={sync}
@@ -114,7 +102,6 @@ function App() {
       placement="header"
     />
   )
-
   function closeSidebar() {
     setIsSidebarOpen(false)
     sidebarToggleRef.current?.focus()
@@ -374,11 +361,10 @@ function App() {
           notes={notes}
           setNotebooks={setNotebooks}
           setNotes={setNotes}
-          userMenu={userMenu}
-          userMenuHeader={userMenuHeader}
+          userMenuTop={userMenuHeader}
+          modeSwitch={<ModeSwitch mode={mode} onChange={switchMode} />}
           isSidebarOpen={isSidebarOpen}
           sidebarToggleRef={sidebarToggleRef}
-          modeSwitch={<ModeSwitch mode={mode} onChange={switchMode} />}
           onToggleSidebar={() => setIsSidebarOpen((open) => !open)}
           onCloseSidebar={closeSidebar}
         />
@@ -393,7 +379,8 @@ function App() {
             onRename={renameList}
             onDelete={deleteList}
             onReorderTo={reorderList}
-            userMenu={userMenu}
+            userMenuTop={userMenuHeader}
+            modeSwitch={<ModeSwitch mode={mode} onChange={switchMode} />}
           />
           <main className="app-content">
             <div className="app-header">
@@ -409,10 +396,6 @@ function App() {
                 <List aria-hidden="true" size={20} />
               </button>
               <h1>{selectedListName}</h1>
-              <div className="app-header-actions">
-                <ModeSwitch mode={mode} onChange={switchMode} />
-                {userMenuHeader}
-              </div>
             </div>
             <TodoList
               todos={activeTodos}
