@@ -4,7 +4,9 @@
   --text-h: #08060d;
   --bg: #fff;
   --border: #e5e4e7;
-  --accent: #9328db;
+  --accent-light: #9328db;
+  --accent-dark: #c084fc;
+  --accent: var(--accent-light);
   --on-accent: var(--bg);
   --danger: #b91c1c;
 
@@ -34,7 +36,7 @@
   --text-h: #f3f4f6;
   --bg: #16171d;
   --border: #2e303a;
-  --accent: #c084fc;
+  --accent: var(--accent-dark);
   --on-accent: var(--bg);
   --danger: #f87171;
 

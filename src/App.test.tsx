@@ -121,6 +121,23 @@ describe('App', () => {
     ).toBeInTheDocument()
   })
 
+  it('changes and persists the accent color', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(getUserMenuTrigger('header'))
+    await user.click(screen.getByRole('button', { name: /^azul$/i }))
+
+    expect(window.localStorage.getItem('accentColor')).toBe('blue')
+    expect(
+      document.documentElement.style.getPropertyValue('--accent-light'),
+    ).toBe('#2563eb')
+    expect(screen.getByRole('button', { name: /^azul$/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+  })
+
   it('shows a default list for new users', () => {
     render(<App />)
 

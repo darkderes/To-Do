@@ -1351,6 +1351,25 @@
   border-color: var(--danger);
 }
 
+.user-menu-accent-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 2px;
+}
+
+.user-menu-accent-swatch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 999px;
+  color: var(--on-accent);
+  cursor: pointer;
+}
+
 /* ---- Panel de sincronización ---- */
 
 .sync-panel {

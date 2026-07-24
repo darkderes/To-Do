@@ -9,6 +9,7 @@ import { UserMenu } from './components/UserMenu'
 import { TodoList } from './components/TodoList'
 import { TaskListSidebar } from './components/TaskListSidebar'
 import { UndoToastStack } from './components/UndoToastStack'
+import { useAccentColor } from './hooks/useAccentColor'
 import { useCloudSync } from './hooks/useCloudSync'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { useTheme } from './hooks/useTheme'
@@ -63,6 +64,7 @@ function App() {
   const sidebarToggleRef = useRef<HTMLButtonElement>(null)
   const undoQueue = useUndoQueue<PendingUndo>()
   const { theme, toggleTheme } = useTheme()
+  const { accentId, setAccentId } = useAccentColor()
   const today = useToday()
   const isMyDay = selectedListId === MY_DAY_ID
 
@@ -95,6 +97,8 @@ function App() {
       onAvatarChange={updateAvatar}
       theme={theme}
       onToggleTheme={toggleTheme}
+      accentId={accentId}
+      onAccentChange={setAccentId}
       placement="sidebar"
     />
   )
@@ -105,6 +109,8 @@ function App() {
       onAvatarChange={updateAvatar}
       theme={theme}
       onToggleTheme={toggleTheme}
+      accentId={accentId}
+      onAccentChange={setAccentId}
       placement="header"
     />
   )

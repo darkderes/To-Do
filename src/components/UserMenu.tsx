@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import {
+  Check,
   CloudArrowUp,
   CloudCheck,
   CloudSlash,
@@ -11,6 +12,7 @@ import {
 } from '@phosphor-icons/react'
 import type { CloudSync } from '../hooks/useCloudSync'
 import { IMAGE_TOO_LARGE_MESSAGE, processImageFile } from '../utils/noteContent'
+import { ACCENT_PALETTE } from '../accentPalette'
 import type { Profile } from '../types'
 
 const AVATAR_MAX_DIMENSION = 256
@@ -21,6 +23,8 @@ interface UserMenuProps {
   onAvatarChange: (dataUrl: string) => void
   theme: 'light' | 'dark'
   onToggleTheme: () => void
+  accentId: string
+  onAccentChange: (id: string) => void
   placement: 'sidebar' | 'header'
 }
 
@@ -30,6 +34,8 @@ export function UserMenu({
   onAvatarChange,
   theme,
   onToggleTheme,
+  accentId,
+  onAccentChange,
   placement,
 }: UserMenuProps) {
   const [open, setOpen] = useState(false)
@@ -148,6 +154,29 @@ export function UserMenu({
               {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </span>
           </button>
+          <div
+            className="user-menu-accent-row"
+            role="group"
+            aria-label="Color de la aplicación"
+          >
+            {ACCENT_PALETTE.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className="user-menu-accent-swatch"
+                style={{
+                  background: theme === 'dark' ? option.dark : option.light,
+                }}
+                aria-label={option.label}
+                aria-pressed={accentId === option.id}
+                onClick={() => onAccentChange(option.id)}
+              >
+                {accentId === option.id && (
+                  <Check aria-hidden="true" size={14} weight="bold" />
+                )}
+              </button>
+            ))}
+          </div>
           {showAccount && (
             <div className="sync-panel">
               <p className="sync-status">
