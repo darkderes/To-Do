@@ -25,6 +25,7 @@ export function useCloudSync({ state, applyRemote }: CloudSyncArgs) {
   const stateRef = useRef(state)
   const skipPushRef = useRef(false)
   const initializedRef = useRef(false)
+  const lastPushedRef = useRef<string | null>(null)
   const userId = session?.user.id
 
   const status: SyncStatus = !supabase
@@ -55,6 +56,7 @@ export function useCloudSync({ state, applyRemote }: CloudSyncArgs) {
   async function pushNow(nextState: SyncedState, id: string) {
     if (!supabase) return
     setStatus('syncing')
+    lastPushedRef.current = JSON.stringify(nextState)
     const { error } = await supabase.from('app_state').upsert({
       user_id: id,
       data: nextState,
@@ -126,8 +128,9 @@ export function useCloudSync({ state, applyRemote }: CloudSyncArgs) {
         (payload) => {
           const remote = (payload.new as { data?: SyncedState } | null)?.data
           if (!remote) return
-          if (JSON.stringify(remote) === JSON.stringify(stateRef.current))
-            return
+          const remoteJson = JSON.stringify(remote)
+          if (remoteJson === JSON.stringify(stateRef.current)) return
+          if (remoteJson === lastPushedRef.current) return
           skipPushRef.current = true
           applyRemote(remote)
           setStatus('synced')
