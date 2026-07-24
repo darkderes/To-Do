@@ -964,11 +964,13 @@
   padding: 2px;
   gap: 2px;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .mode-switch button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   padding: 6px 12px;
   min-height: 32px;
@@ -978,6 +980,8 @@
   color: var(--text);
   font-size: 0.9rem;
   cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .mode-switch button.active {
@@ -1247,8 +1251,9 @@
   }
 
   .mode-switch button {
-    padding: 8px 12px;
-    min-height: 44px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
   }
 
   .note-toolbar-button .note-toolbar-label {
