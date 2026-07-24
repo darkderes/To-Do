@@ -186,13 +186,16 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   })
 }
 
-export async function processImageFile(file: File): Promise<string> {
+export async function processImageFile(
+  file: File,
+  maxDimension = MAX_DIMENSION,
+): Promise<string> {
   const original = await readAsDataUrl(file)
   if (file.size <= KEEP_ORIGINAL_BYTES) return original
   const image = await loadImage(original)
   const scale = Math.min(
     1,
-    MAX_DIMENSION / Math.max(image.width, image.height, 1),
+    maxDimension / Math.max(image.width, image.height, 1),
   )
   const canvas = document.createElement('canvas')
   canvas.width = Math.max(1, Math.round(image.width * scale))

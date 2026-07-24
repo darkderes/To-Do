@@ -58,48 +58,58 @@ describe('App', () => {
     expect(screen.getByText(/aún no hay tareas/i)).toBeInTheDocument()
   })
 
+  // El avatar se renderiza dos veces (sidebar para el drawer mobile, header
+  // para desktop) y ambos quedan en el DOM en jsdom, que no evalúa media
+  // queries; el orden de aparición es estable: sidebar primero, header después.
+  function getUserMenuTrigger(placement: 'sidebar' | 'header') {
+    const triggers = screen.getAllByRole('button', {
+      name: /perfil y configuración/i,
+    })
+    return triggers[placement === 'sidebar' ? 0 : 1]
+  }
+
   it('toggles between light and dark theme and persists the choice', async () => {
     const user = userEvent.setup()
     render(<App />)
 
     expect(document.documentElement.dataset.theme).toBe('light')
 
-    const toggle = screen.getByRole('button', {
-      name: /cambiar a modo oscuro/i,
-    })
-    await user.click(toggle)
+    await user.click(getUserMenuTrigger('header'))
+    await user.click(
+      screen.getByRole('button', { name: /activar modo oscuro/i }),
+    )
 
     expect(document.documentElement.dataset.theme).toBe('dark')
     expect(window.localStorage.getItem('theme')).toBe('dark')
-    expect(
-      screen.getByRole('button', { name: /cambiar a modo claro/i }),
-    ).toBeInTheDocument()
 
     await user.click(
-      screen.getByRole('button', { name: /cambiar a modo claro/i }),
+      screen.getByRole('button', { name: /activar modo claro/i }),
     )
 
     expect(document.documentElement.dataset.theme).toBe('light')
     expect(window.localStorage.getItem('theme')).toBe('light')
   })
 
-  it('restores a previously stored theme preference', () => {
+  it('restores a previously stored theme preference', async () => {
     window.localStorage.setItem('theme', 'dark')
+    const user = userEvent.setup()
     render(<App />)
 
     expect(document.documentElement.dataset.theme).toBe('dark')
+    await user.click(getUserMenuTrigger('header'))
     expect(
-      screen.getByRole('button', { name: /cambiar a modo claro/i }),
+      screen.getByRole('button', { name: /activar modo claro/i }),
     ).toBeInTheDocument()
   })
 
-  it('toggles the theme from the settings section inside the sidebar drawer', async () => {
+  it('toggles the theme from the user menu inside the sidebar drawer', async () => {
     const user = userEvent.setup()
     render(<App />)
 
     await user.click(
       screen.getByRole('button', { name: /listas de tareas, lista actual/i }),
     )
+    await user.click(getUserMenuTrigger('sidebar'))
     await user.click(
       screen.getByRole('button', { name: /activar modo oscuro/i }),
     )

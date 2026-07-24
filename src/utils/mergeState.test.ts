@@ -36,12 +36,14 @@ describe('mergeState', () => {
       todos: [],
       notebooks: [{ id: 'nb1', name: 'NB' }],
       notes: [{ ...base, title: 'vieja', updatedAt: 10 }],
+      profile: { avatar: null, avatarUpdatedAt: 0 },
     }
     const local: SyncedState = {
       taskLists: [{ id: 'l2', name: 'Local' }],
       todos: [{ id: 't1', text: 'x', completed: false, listId: 'l2' }],
       notebooks: [{ id: 'nb1', name: 'NB local' }],
       notes: [{ ...base, title: 'nueva', updatedAt: 20 }],
+      profile: { avatar: null, avatarUpdatedAt: 0 },
     }
 
     const merged = mergeState(remote, local)
@@ -58,8 +60,27 @@ describe('mergeState', () => {
       todos: [],
       notebooks: [],
       notes: [],
+      profile: { avatar: null, avatarUpdatedAt: 0 },
     }
     const merged = mergeState({} as SyncedState, local)
     expect(merged).toEqual(local)
+  })
+
+  it('resolves profile by the newer avatarUpdatedAt', () => {
+    const local: SyncedState = {
+      taskLists: [],
+      todos: [],
+      notebooks: [],
+      notes: [],
+      profile: { avatar: 'local-avatar', avatarUpdatedAt: 5 },
+    }
+    const remote: SyncedState = {
+      ...local,
+      profile: { avatar: 'remote-avatar', avatarUpdatedAt: 10 },
+    }
+    expect(mergeState(remote, local).profile.avatar).toBe('remote-avatar')
+    expect(mergeState({ ...remote, profile: { avatar: 'old', avatarUpdatedAt: 1 } }, local).profile.avatar).toBe(
+      'local-avatar',
+    )
   })
 })

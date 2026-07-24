@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react'
 import {
   DotsSixVertical,
-  Moon,
   PencilSimple,
   Plus,
   Sun,
@@ -16,28 +15,24 @@ interface TaskListSidebarProps {
   lists: TaskList[]
   selectedListId: string
   isOpen: boolean
-  theme: 'light' | 'dark'
   onSelect: (id: string) => void
   onAdd: (name: string) => void
   onRename: (id: string, name: string) => void
   onDelete: (id: string) => void
   onReorderTo: (id: string, targetIndex: number) => void
-  onToggleTheme: () => void
-  syncPanel?: ReactNode
+  userMenu?: ReactNode
 }
 
 export function TaskListSidebar({
   lists,
   selectedListId,
   isOpen,
-  theme,
   onSelect,
   onAdd,
   onRename,
   onDelete,
   onReorderTo,
-  onToggleTheme,
-  syncPanel,
+  userMenu,
 }: TaskListSidebarProps) {
   const [newListName, setNewListName] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -232,25 +227,7 @@ export function TaskListSidebar({
         </div>
         <button type="submit">Añadir lista</button>
       </form>
-      <div className="sidebar-settings">
-        <h2 className="sidebar-settings-heading">Configuración</h2>
-        <button
-          type="button"
-          className="sidebar-settings-item"
-          onClick={onToggleTheme}
-          aria-label={
-            theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'
-          }
-        >
-          <span aria-hidden="true">
-            Modo {theme === 'dark' ? 'oscuro' : 'claro'}
-          </span>
-          <span aria-hidden="true">
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-          </span>
-        </button>
-        {syncPanel}
-      </div>
+      {userMenu}
     </nav>
   )
 }

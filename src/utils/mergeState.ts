@@ -22,6 +22,8 @@ export function mergeState(
   remote: SyncedState,
   local: SyncedState,
 ): SyncedState {
+  const remoteProfile = remote.profile
+  const localProfile = local.profile
   return {
     taskLists: mergeById(remote.taskLists ?? [], local.taskLists ?? []),
     todos: mergeById(remote.todos ?? [], local.todos ?? []),
@@ -29,5 +31,10 @@ export function mergeState(
     notes: mergeById(remote.notes ?? [], local.notes ?? [], (r, l) =>
       l.updatedAt > r.updatedAt ? l : r,
     ),
+    profile:
+      (remoteProfile?.avatarUpdatedAt ?? 0) >=
+      (localProfile?.avatarUpdatedAt ?? 0)
+        ? (remoteProfile ?? localProfile)
+        : localProfile,
   }
 }

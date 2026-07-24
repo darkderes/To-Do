@@ -1,13 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Dispatch, ReactNode, RefObject, SetStateAction } from 'react'
-import {
-  List,
-  MagnifyingGlass,
-  Moon,
-  Plus,
-  Sun,
-  Trash,
-} from '@phosphor-icons/react'
+import { List, MagnifyingGlass, Plus, Trash } from '@phosphor-icons/react'
 import { NotebookSidebar } from './NotebookSidebar'
 import { NoteEditor } from './NoteEditor'
 import { UndoToastStack } from './UndoToastStack'
@@ -32,13 +25,12 @@ interface NotesAreaProps {
   setNotebooks: Dispatch<SetStateAction<Notebook[]>>
   setNotes: Dispatch<SetStateAction<Note[]>>
   isSidebarOpen: boolean
-  theme: 'light' | 'dark'
   sidebarToggleRef: RefObject<HTMLButtonElement | null>
   modeSwitch: ReactNode
-  syncPanel: ReactNode
+  userMenu: ReactNode
+  userMenuHeader: ReactNode
   onToggleSidebar: () => void
   onCloseSidebar: () => void
-  onToggleTheme: () => void
 }
 
 function formatDate(timestamp: number): string {
@@ -54,13 +46,12 @@ export function NotesArea({
   setNotebooks,
   setNotes,
   isSidebarOpen,
-  theme,
   sidebarToggleRef,
   modeSwitch,
-  syncPanel,
+  userMenu,
+  userMenuHeader,
   onToggleSidebar,
   onCloseSidebar,
-  onToggleTheme,
 }: NotesAreaProps) {
   const [selectedNotebookId, setSelectedNotebookId] = useLocalStorage<string>(
     'selectedNotebookId',
@@ -234,14 +225,12 @@ export function NotesArea({
         notebooks={notebooks}
         selectedNotebookId={selectedNotebookId}
         isOpen={isSidebarOpen}
-        theme={theme}
         onSelect={selectNotebook}
         onAdd={addNotebook}
         onRename={renameNotebook}
         onDelete={deleteNotebook}
         onReorderTo={reorderNotebook}
-        onToggleTheme={onToggleTheme}
-        syncPanel={syncPanel}
+        userMenu={userMenu}
       />
       <main className="app-content">
         <div className="app-header">
@@ -257,22 +246,11 @@ export function NotesArea({
             <List aria-hidden="true" size={20} />
           </button>
           <h1>{selectedNotebook?.name ?? ''}</h1>
-          {modeSwitch}
+          <div className="app-header-actions">
+            {modeSwitch}
+            {userMenuHeader}
+          </div>
         </div>
-        <button
-          type="button"
-          className="theme-toggle"
-          onClick={onToggleTheme}
-          aria-label={
-            theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
-          }
-        >
-          {theme === 'dark' ? (
-            <Sun aria-hidden="true" size={18} />
-          ) : (
-            <Moon aria-hidden="true" size={18} />
-          )}
-        </button>
         {activeNote ? (
           <NoteEditor
             note={activeNote}

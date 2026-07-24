@@ -53,9 +53,17 @@ export interface Note {
   updatedAt: number
 }
 
+export interface Profile {
+  avatar: string | null
+  avatarUpdatedAt: number
+}
+
+export const DEFAULT_PROFILE: Profile = { avatar: null, avatarUpdatedAt: 0 }
+
 export interface SyncedState {
   taskLists: TaskList[]
   todos: Todo[]
   notebooks: Notebook[]
   notes: Note[]
+  profile: Profile
 }

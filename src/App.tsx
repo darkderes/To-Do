@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CaretDown, CaretUp, List, Moon, Sun } from '@phosphor-icons/react'
+import { CaretDown, CaretUp, List } from '@phosphor-icons/react'
 import { AddTodo } from './components/AddTodo'
 import { LoginScreen } from './components/LoginScreen'
 import { ModeSwitch } from './components/ModeSwitch'
 import { ResetPasswordScreen } from './components/ResetPasswordScreen'
 import { NotesArea } from './components/NotesArea'
-import { SyncPanel } from './components/SyncPanel'
+import { UserMenu } from './components/UserMenu'
 import { TodoList } from './components/TodoList'
 import { TaskListSidebar } from './components/TaskListSidebar'
 import { UndoToastStack } from './components/UndoToastStack'
@@ -14,12 +14,13 @@ import { useLocalStorage } from './hooks/useLocalStorage'
 import { useTheme } from './hooks/useTheme'
 import { useToday } from './hooks/useToday'
 import { useUndoQueue } from './hooks/useUndoQueue'
-import { DEFAULT_NOTEBOOKS, MY_DAY_ID } from './types'
+import { DEFAULT_NOTEBOOKS, DEFAULT_PROFILE, MY_DAY_ID } from './types'
 import type {
   AppMode,
   Note,
   Notebook,
   Priority,
+  Profile,
   SyncedState,
   TaskList,
   Todo,
@@ -52,6 +53,10 @@ function App() {
     DEFAULT_NOTEBOOKS,
   )
   const [notes, setNotes] = useLocalStorage<Note[]>('notes', [])
+  const [profile, setProfile] = useLocalStorage<Profile>(
+    'profile',
+    DEFAULT_PROFILE,
+  )
   const [mode, setMode] = useLocalStorage<AppMode>('appMode', 'tasks')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [showCompleted, setShowCompleted] = useState(false)
@@ -62,8 +67,8 @@ function App() {
   const isMyDay = selectedListId === MY_DAY_ID
 
   const syncedState = useMemo<SyncedState>(
-    () => ({ taskLists: lists, todos, notebooks, notes }),
-    [lists, todos, notebooks, notes],
+    () => ({ taskLists: lists, todos, notebooks, notes, profile }),
+    [lists, todos, notebooks, notes, profile],
   )
 
   function applyRemoteState(remote: SyncedState) {
@@ -71,13 +76,38 @@ function App() {
     setTodos(remote.todos)
     setNotebooks(remote.notebooks)
     setNotes(remote.notes)
+    setProfile(remote.profile ?? DEFAULT_PROFILE)
   }
 
   const sync = useCloudSync({
     state: syncedState,
     applyRemote: applyRemoteState,
   })
-  const syncPanel = <SyncPanel sync={sync} />
+
+  function updateAvatar(dataUrl: string) {
+    setProfile({ avatar: dataUrl, avatarUpdatedAt: Date.now() })
+  }
+
+  const userMenu = (
+    <UserMenu
+      sync={sync}
+      profile={profile}
+      onAvatarChange={updateAvatar}
+      theme={theme}
+      onToggleTheme={toggleTheme}
+      placement="sidebar"
+    />
+  )
+  const userMenuHeader = (
+    <UserMenu
+      sync={sync}
+      profile={profile}
+      onAvatarChange={updateAvatar}
+      theme={theme}
+      onToggleTheme={toggleTheme}
+      placement="header"
+    />
+  )
 
   function closeSidebar() {
     setIsSidebarOpen(false)
@@ -338,14 +368,13 @@ function App() {
           notes={notes}
           setNotebooks={setNotebooks}
           setNotes={setNotes}
-          syncPanel={syncPanel}
+          userMenu={userMenu}
+          userMenuHeader={userMenuHeader}
           isSidebarOpen={isSidebarOpen}
-          theme={theme}
           sidebarToggleRef={sidebarToggleRef}
           modeSwitch={<ModeSwitch mode={mode} onChange={switchMode} />}
           onToggleSidebar={() => setIsSidebarOpen((open) => !open)}
           onCloseSidebar={closeSidebar}
-          onToggleTheme={toggleTheme}
         />
       ) : (
         <>
@@ -353,14 +382,12 @@ function App() {
             lists={lists}
             selectedListId={selectedListId}
             isOpen={isSidebarOpen}
-            theme={theme}
             onSelect={selectList}
             onAdd={addList}
             onRename={renameList}
             onDelete={deleteList}
             onReorderTo={reorderList}
-            onToggleTheme={toggleTheme}
-            syncPanel={syncPanel}
+            userMenu={userMenu}
           />
           <main className="app-content">
             <div className="app-header">
@@ -376,24 +403,11 @@ function App() {
                 <List aria-hidden="true" size={20} />
               </button>
               <h1>{selectedListName}</h1>
-              <ModeSwitch mode={mode} onChange={switchMode} />
+              <div className="app-header-actions">
+                <ModeSwitch mode={mode} onChange={switchMode} />
+                {userMenuHeader}
+              </div>
             </div>
-            <button
-              type="button"
-              className="theme-toggle"
-              onClick={toggleTheme}
-              aria-label={
-                theme === 'dark'
-                  ? 'Cambiar a modo claro'
-                  : 'Cambiar a modo oscuro'
-              }
-            >
-              {theme === 'dark' ? (
-                <Sun aria-hidden="true" size={18} />
-              ) : (
-                <Moon aria-hidden="true" size={18} />
-              )}
-            </button>
             <TodoList
               todos={activeTodos}
               emptyMessage={activeEmptyMessage}

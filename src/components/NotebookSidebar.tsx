@@ -1,13 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react'
-import {
-  DotsSixVertical,
-  Moon,
-  PencilSimple,
-  Plus,
-  Sun,
-  X,
-} from '@phosphor-icons/react'
+import { DotsSixVertical, PencilSimple, Plus, X } from '@phosphor-icons/react'
 import { useRowDrag } from '../hooks/useRowDrag'
 import type { Notebook } from '../types'
 
@@ -15,28 +8,24 @@ interface NotebookSidebarProps {
   notebooks: Notebook[]
   selectedNotebookId: string
   isOpen: boolean
-  theme: 'light' | 'dark'
   onSelect: (id: string) => void
   onAdd: (name: string) => void
   onRename: (id: string, name: string) => void
   onDelete: (id: string) => void
   onReorderTo: (id: string, targetIndex: number) => void
-  onToggleTheme: () => void
-  syncPanel?: ReactNode
+  userMenu?: ReactNode
 }
 
 export function NotebookSidebar({
   notebooks,
   selectedNotebookId,
   isOpen,
-  theme,
   onSelect,
   onAdd,
   onRename,
   onDelete,
   onReorderTo,
-  onToggleTheme,
-  syncPanel,
+  userMenu,
 }: NotebookSidebarProps) {
   const [newName, setNewName] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -224,25 +213,7 @@ export function NotebookSidebar({
         </div>
         <button type="submit">Añadir notebook</button>
       </form>
-      <div className="sidebar-settings">
-        <h2 className="sidebar-settings-heading">Configuración</h2>
-        <button
-          type="button"
-          className="sidebar-settings-item"
-          onClick={onToggleTheme}
-          aria-label={
-            theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'
-          }
-        >
-          <span aria-hidden="true">
-            Modo {theme === 'dark' ? 'oscuro' : 'claro'}
-          </span>
-          <span aria-hidden="true">
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-          </span>
-        </button>
-        {syncPanel}
-      </div>
+      {userMenu}
     </nav>
   )
 }
