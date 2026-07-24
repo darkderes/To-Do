@@ -78,16 +78,23 @@ export function UserMenu({
     <div className={`user-menu user-menu--${placement}`} ref={menuRef}>
       <button
         type="button"
-        className="user-menu-trigger"
+        className={`user-menu-trigger user-menu-trigger--${placement}`}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label="Perfil y configuración"
+        aria-label={placement === 'header' ? 'Perfil y configuración' : undefined}
         onClick={() => setOpen((value) => !value)}
       >
-        {profile.avatar ? (
-          <img src={profile.avatar} alt="" />
-        ) : (
-          <UserCircle aria-hidden="true" size={22} />
+        <span className="user-menu-trigger-avatar" aria-hidden="true">
+          {profile.avatar ? (
+            <img src={profile.avatar} alt="" />
+          ) : (
+            <UserCircle size={20} />
+          )}
+        </span>
+        {placement === 'sidebar' && (
+          <span className="user-menu-trigger-label">
+            {showAccount ? sync.email : 'Perfil y configuración'}
+          </span>
         )}
       </button>
       {open && (
