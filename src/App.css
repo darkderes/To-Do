@@ -222,7 +222,7 @@
 }
 
 .sidebar-settings {
-  display: none;
+  display: block;
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid var(--border);
@@ -801,10 +801,6 @@
 
   .todo-item .delete {
     display: none;
-  }
-
-  .sidebar-settings {
-    display: block;
   }
 
   .add-list {
