@@ -103,10 +103,17 @@
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .task-list-button svg {
   flex-shrink: 0;
+}
+
+.task-list-nav li:not(.active) .task-list-button:hover {
+  background: var(--border);
 }
 
 .task-list-nav li.active .task-list-button {
@@ -124,10 +131,14 @@
   opacity: 0.75;
   cursor: pointer;
   padding: 2px 6px;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
 }
 
 .task-list-action:hover:not(:disabled) {
   opacity: 1;
+  transform: scale(1.12);
 }
 
 .task-list-action:disabled {
