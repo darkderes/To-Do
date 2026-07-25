@@ -16,6 +16,14 @@ export function getTodayString() {
   return `${year}-${month}-${day}`
 }
 
+export function addDaysToIso(iso: string, days: number) {
+  const [year, month, day] = iso.split('-').map(Number)
+  const date = new Date(year, month - 1, day + days)
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${mm}-${dd}`
+}
+
 export interface Todo {
   id: string
   text: string
@@ -24,6 +32,7 @@ export interface Todo {
   dueDate?: string
   priority?: Priority
   myDay?: string
+  description?: string
 }
 
 export interface TaskList {

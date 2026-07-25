@@ -52,7 +52,8 @@ describe('App', () => {
       screen.getByLabelText(/texto de la nueva tarea/i),
       'Buy milk{Enter}',
     )
-    await user.click(screen.getByRole('button', { name: /eliminar/i }))
+    await user.click(screen.getByText('Buy milk'))
+    await user.click(screen.getByRole('button', { name: /eliminar tarea/i }))
 
     expect(screen.queryByText('Buy milk')).not.toBeInTheDocument()
     expect(screen.getByText(/aún no hay tareas/i)).toBeInTheDocument()
@@ -233,7 +234,7 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'Work' })).toBeInTheDocument()
   })
 
-  it('edits a todo text inline with the pencil button', async () => {
+  it('edits a todo title from the details modal', async () => {
     const user = userEvent.setup()
     render(<App />)
 
@@ -241,17 +242,18 @@ describe('App', () => {
       screen.getByLabelText(/texto de la nueva tarea/i),
       'Buy milk{Enter}',
     )
-    await user.click(screen.getByRole('button', { name: 'Editar "Buy milk"' }))
+    await user.click(screen.getByText('Buy milk'))
 
-    const input = screen.getByLabelText(/editar texto de "buy milk"/i)
+    const input = screen.getByLabelText(/título de la tarea/i)
     await user.clear(input)
-    await user.type(input, 'Buy oat milk{Enter}')
+    await user.type(input, 'Buy oat milk')
+    await user.click(screen.getByRole('button', { name: 'Guardar' }))
 
     expect(screen.getByText('Buy oat milk')).toBeInTheDocument()
     expect(screen.queryByText('Buy milk')).not.toBeInTheDocument()
   })
 
-  it('cancels a todo text edit with Escape, keeping the original text', async () => {
+  it('cancels a todo edit with Escape, keeping the original text', async () => {
     const user = userEvent.setup()
     render(<App />)
 
@@ -259,11 +261,12 @@ describe('App', () => {
       screen.getByLabelText(/texto de la nueva tarea/i),
       'Buy milk{Enter}',
     )
-    await user.click(screen.getByRole('button', { name: 'Editar "Buy milk"' }))
+    await user.click(screen.getByText('Buy milk'))
 
-    const input = screen.getByLabelText(/editar texto de "buy milk"/i)
+    const input = screen.getByLabelText(/título de la tarea/i)
     await user.clear(input)
-    await user.type(input, 'Something else{Escape}')
+    await user.type(input, 'Something else')
+    await user.keyboard('{Escape}')
 
     expect(screen.getByText('Buy milk')).toBeInTheDocument()
     expect(screen.queryByText('Something else')).not.toBeInTheDocument()
@@ -316,7 +319,7 @@ describe('App', () => {
     expect(screen.getByText('Hoy')).toBeInTheDocument()
   })
 
-  it('closes the details form with the cancel button without saving', async () => {
+  it('closes the details modal with the cancel button without saving', async () => {
     const user = userEvent.setup()
     render(<App />)
 
@@ -324,17 +327,12 @@ describe('App', () => {
       screen.getByLabelText(/texto de la nueva tarea/i),
       'Buy milk{Enter}',
     )
-    await user.click(
-      screen.getByRole('button', { name: /editar detalles de "buy milk"/i }),
-    )
-    await user.selectOptions(
-      screen.getByLabelText(/prioridad de "buy milk"/i),
-      'high',
-    )
-    await user.click(screen.getByRole('button', { name: /cancelar/i }))
+    await user.click(screen.getByText('Buy milk'))
+    await user.click(screen.getByRole('button', { name: /alta prioridad/i }))
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
 
     expect(
-      screen.queryByRole('button', { name: /guardar/i }),
+      screen.queryByRole('button', { name: 'Guardar' }),
     ).not.toBeInTheDocument()
     expect(document.querySelector('.priority-badge')).not.toBeInTheDocument()
   })
@@ -347,7 +345,8 @@ describe('App', () => {
       screen.getByLabelText(/texto de la nueva tarea/i),
       'Buy milk{Enter}',
     )
-    await user.click(screen.getByRole('button', { name: /eliminar/i }))
+    await user.click(screen.getByText('Buy milk'))
+    await user.click(screen.getByRole('button', { name: /eliminar tarea/i }))
 
     expect(screen.queryByText('Buy milk')).not.toBeInTheDocument()
 
@@ -364,7 +363,8 @@ describe('App', () => {
       screen.getByLabelText(/texto de la nueva tarea/i),
       'Buy milk{Enter}',
     )
-    await user.click(screen.getByRole('button', { name: /eliminar/i }))
+    await user.click(screen.getByText('Buy milk'))
+    await user.click(screen.getByRole('button', { name: /eliminar tarea/i }))
 
     expect(screen.getByRole('button', { name: /deshacer/i })).toHaveFocus()
   })
@@ -382,12 +382,10 @@ describe('App', () => {
       'Walk dog{Enter}',
     )
 
-    await user.click(
-      screen.getByRole('button', { name: /eliminar "buy milk"/i }),
-    )
-    await user.click(
-      screen.getByRole('button', { name: /eliminar "walk dog"/i }),
-    )
+    await user.click(screen.getByText('Buy milk'))
+    await user.click(screen.getByRole('button', { name: /eliminar tarea/i }))
+    await user.click(screen.getByText('Walk dog'))
+    await user.click(screen.getByRole('button', { name: /eliminar tarea/i }))
 
     expect(screen.getAllByRole('button', { name: /deshacer/i })).toHaveLength(2)
 
@@ -406,7 +404,8 @@ describe('App', () => {
       target: { value: 'Buy milk' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Añadir' }))
-    fireEvent.click(screen.getByRole('button', { name: /eliminar/i }))
+    fireEvent.click(screen.getByText('Buy milk'))
+    fireEvent.click(screen.getByRole('button', { name: /eliminar tarea/i }))
 
     const toast = screen.getByRole('status')
     fireEvent.mouseEnter(toast)
@@ -697,9 +696,8 @@ describe('App', () => {
       screen.getByLabelText(/texto de la nueva tarea/i),
       'Ship feature{Enter}',
     )
-    await user.click(
-      screen.getByRole('button', { name: /eliminar "ship feature"/i }),
-    )
+    await user.click(screen.getByText('Ship feature'))
+    await user.click(screen.getByRole('button', { name: /eliminar tarea/i }))
     await user.click(
       screen.getByRole('button', { name: /eliminar lista "work"/i }),
     )
@@ -1003,9 +1001,9 @@ describe('App', () => {
     expect(screen.getByText('Buy milk')).toBeInTheDocument()
     expect(document.querySelector('.due-badge')).not.toBeInTheDocument()
     expect(document.querySelector('.priority-badge')).not.toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /editar detalles de "buy milk"/i }),
-    ).toBeInTheDocument()
+
+    await user.click(screen.getByText('Buy milk'))
+    expect(screen.getByText('Descripción')).toBeInTheDocument()
   })
 
   it('shows the add-task input in a fixed bar at the bottom with the "Agregar tarea" placeholder', () => {
@@ -1025,17 +1023,13 @@ describe('App', () => {
       'Buy milk{Enter}',
     )
 
-    await user.click(
-      screen.getByRole('button', { name: /editar detalles de "buy milk"/i }),
-    )
+    await user.click(screen.getByText('Buy milk'))
+    await user.click(screen.getByRole('button', { name: 'Personalizado' }))
     await user.type(
-      screen.getByLabelText(/fecha límite de "buy milk"/i),
+      screen.getByLabelText(/fecha personalizada/i),
       '2026-08-01',
     )
-    await user.selectOptions(
-      screen.getByLabelText(/prioridad de "buy milk"/i),
-      'low',
-    )
+    await user.click(screen.getByRole('button', { name: /baja prioridad/i }))
     await user.click(screen.getByRole('button', { name: 'Guardar' }))
 
     expect(screen.getByText(/01\/08\/2026/)).toBeInTheDocument()

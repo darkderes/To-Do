@@ -7,6 +7,8 @@ import { ResetPasswordScreen } from './components/ResetPasswordScreen'
 import { NotesArea } from './components/NotesArea'
 import { UserMenu } from './components/UserMenu'
 import { TodoList } from './components/TodoList'
+import { TodoDetailModal } from './components/TodoDetailModal'
+import type { TodoDetailUpdates } from './components/TodoDetailModal'
 import { TaskListSidebar } from './components/TaskListSidebar'
 import { UndoToastStack } from './components/UndoToastStack'
 import { useAccentColor } from './hooks/useAccentColor'
@@ -20,7 +22,6 @@ import type {
   AppMode,
   Note,
   Notebook,
-  Priority,
   Profile,
   SyncedState,
   TaskList,
@@ -61,6 +62,7 @@ function App() {
   const [mode, setMode] = useLocalStorage<AppMode>('appMode', 'tasks')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [showCompleted, setShowCompleted] = useState(false)
+  const [detailsTodoId, setDetailsTodoId] = useState<string | null>(null)
   const sidebarToggleRef = useRef<HTMLButtonElement>(null)
   const undoQueue = useUndoQueue<PendingUndo>()
   const { theme, toggleTheme } = useTheme()
@@ -201,12 +203,6 @@ function App() {
     )
   }
 
-  function renameTodo(id: string, text: string) {
-    setTodos((current) =>
-      current.map((todo) => (todo.id === id ? { ...todo, text } : todo)),
-    )
-  }
-
   function toggleTodo(id: string) {
     const target = todos.find((todo) => todo.id === id)
     if (!target) return
@@ -218,14 +214,18 @@ function App() {
     )
   }
 
-  function updateTodoMeta(
-    id: string,
-    dueDate: string | undefined,
-    priority: Priority | undefined,
-  ) {
+  function updateTodoDetails(id: string, updates: TodoDetailUpdates) {
     setTodos((current) =>
       current.map((todo) =>
-        todo.id === id ? { ...todo, dueDate, priority } : todo,
+        todo.id === id
+          ? {
+              ...todo,
+              text: updates.text,
+              description: updates.description,
+              dueDate: updates.dueDate,
+              priority: updates.priority,
+            }
+          : todo,
       ),
     )
   }
@@ -295,6 +295,7 @@ function App() {
   )
 
   const activeCount = activeTodos.length
+  const detailsTodo = todos.find((todo) => todo.id === detailsTodoId) ?? null
 
   function reorderWithinSubset(
     subset: Todo[],
@@ -401,13 +402,12 @@ function App() {
               todos={activeTodos}
               emptyMessage={activeEmptyMessage}
               onToggle={toggleTodo}
-              onRename={renameTodo}
               onDelete={deleteTodo}
               onReorderTo={(id, targetIndex) =>
                 reorderWithinSubset(activeTodos, id, targetIndex)
               }
-              onUpdateMeta={updateTodoMeta}
               onToggleMyDay={toggleMyDay}
+              onOpenDetails={setDetailsTodoId}
               today={today}
             />
             {completedTodos.length > 0 && (
@@ -430,13 +430,12 @@ function App() {
                     todos={completedTodos}
                     emptyMessage="No hay tareas completadas."
                     onToggle={toggleTodo}
-                    onRename={renameTodo}
                     onDelete={deleteTodo}
                     onReorderTo={(id, targetIndex) =>
                       reorderWithinSubset(completedTodos, id, targetIndex)
                     }
-                    onUpdateMeta={updateTodoMeta}
                     onToggleMyDay={toggleMyDay}
+                    onOpenDetails={setDetailsTodoId}
                     today={today}
                   />
                 )}
@@ -448,6 +447,18 @@ function App() {
             </p>
             <AddTodo onAdd={addTodo} />
           </main>
+          {detailsTodo && (
+            <TodoDetailModal
+              key={detailsTodo.id}
+              todo={detailsTodo}
+              listName={selectedListName}
+              today={today}
+              onClose={() => setDetailsTodoId(null)}
+              onSave={updateTodoDetails}
+              onDelete={deleteTodo}
+              onToggle={toggleTodo}
+            />
+          )}
           <UndoToastStack
             items={undoQueue.entries.map((entry) => ({
               id: entry.id,

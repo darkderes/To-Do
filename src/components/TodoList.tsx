@@ -3,7 +3,7 @@ import type {
   KeyboardEvent as ReactKeyboardEvent,
   MouseEvent as ReactMouseEvent,
 } from 'react'
-import type { Priority, Todo } from '../types'
+import type { Todo } from '../types'
 import { useRowDrag } from '../hooks/useRowDrag'
 import { TodoItem } from './TodoItem'
 
@@ -11,15 +11,10 @@ interface TodoListProps {
   todos: Todo[]
   emptyMessage: string
   onToggle: (id: string) => void
-  onRename: (id: string, text: string) => void
   onDelete: (id: string) => void
   onReorderTo: (id: string, targetIndex: number) => void
-  onUpdateMeta: (
-    id: string,
-    dueDate: string | undefined,
-    priority: Priority | undefined,
-  ) => void
   onToggleMyDay: (id: string) => void
+  onOpenDetails: (id: string) => void
   today: string
 }
 
@@ -27,11 +22,10 @@ export function TodoList({
   todos,
   emptyMessage,
   onToggle,
-  onRename,
   onDelete,
   onReorderTo,
-  onUpdateMeta,
   onToggleMyDay,
+  onOpenDetails,
   today,
 }: TodoListProps) {
   const listRef = useRef<HTMLUListElement>(null)
@@ -83,10 +77,7 @@ export function TodoList({
           isSwipeOpen={drag.openSwipeId === todo.id}
           isInMyDay={todo.myDay === today}
           onToggle={onToggle}
-          onRename={onRename}
           onToggleMyDay={onToggleMyDay}
-          onDelete={onDelete}
-          onUpdateMeta={onUpdateMeta}
           onReorderKeyDown={(event) =>
             handleReorderKeyDown(event, index, todo.id)
           }
@@ -97,7 +88,7 @@ export function TodoList({
           onRowPointerUp={drag.handleRowPointerUp}
           onLabelClick={handleLabelClick}
           onSwipeDelete={() => handleSwipeDelete(todo.id)}
-          onStartEditingDetails={() => drag.setOpenSwipeId(null)}
+          onOpenDetails={() => onOpenDetails(todo.id)}
         />
       ))}
     </ul>
