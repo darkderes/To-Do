@@ -1,7 +1,6 @@
 import type {
   CSSProperties,
   KeyboardEvent as ReactKeyboardEvent,
-  MouseEvent,
   PointerEvent as ReactPointerEvent,
 } from 'react'
 import { Calendar, DotsSixVertical, Star } from '@phosphor-icons/react'
@@ -14,7 +13,6 @@ interface TodoItemProps {
   rowTransitionNone: boolean
   isReorderActive: boolean
   liStyle: CSSProperties
-  isSwipeOpen: boolean
   isInMyDay: boolean
   onToggle: (id: string) => void
   onToggleMyDay: (id: string) => void
@@ -22,9 +20,8 @@ interface TodoItemProps {
   onRowPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void
   onRowPointerMove: (event: ReactPointerEvent<HTMLDivElement>) => void
   onRowPointerUp: (event: ReactPointerEvent<HTMLDivElement>) => void
-  onLabelClick: (event: MouseEvent) => void
   onSwipeDelete: () => void
-  onOpenDetails: () => void
+  onRowClick: () => void
 }
 
 function formatDueDate(dueDate: string, today: string) {
@@ -43,7 +40,6 @@ export function TodoItem({
   rowTransitionNone,
   isReorderActive,
   liStyle,
-  isSwipeOpen,
   isInMyDay,
   onToggle,
   onToggleMyDay,
@@ -51,9 +47,8 @@ export function TodoItem({
   onRowPointerDown,
   onRowPointerMove,
   onRowPointerUp,
-  onLabelClick,
   onSwipeDelete,
-  onOpenDetails,
+  onRowClick,
 }: TodoItemProps) {
   return (
     <li className="todo-item" style={liStyle}>
@@ -78,6 +73,18 @@ export function TodoItem({
         onPointerMove={onRowPointerMove}
         onPointerUp={onRowPointerUp}
         onPointerCancel={onRowPointerUp}
+        onClick={(event) => {
+          if (
+            event.target instanceof Element &&
+            event.target.closest(
+              'input[type="checkbox"], .my-day-toggle, .todo-drag-handle',
+            )
+          ) {
+            return
+          }
+          event.preventDefault()
+          onRowClick()
+        }}
       >
         <div className="todo-item-main">
           <div className="todo-item-content">
@@ -89,20 +96,13 @@ export function TodoItem({
             >
               <DotsSixVertical aria-hidden="true" size={18} />
             </button>
-            <label onClick={onLabelClick}>
+            <label>
               <input
                 type="checkbox"
                 checked={todo.completed}
                 onChange={() => onToggle(todo.id)}
               />
-              <span
-                className={todo.completed ? 'completed' : ''}
-                onClick={(event) => {
-                  event.preventDefault()
-                  if (isSwipeOpen) return
-                  onOpenDetails()
-                }}
-              >
+              <span className={todo.completed ? 'completed' : ''}>
                 {todo.text}
               </span>
             </label>

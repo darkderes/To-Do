@@ -1,8 +1,5 @@
 import { useRef } from 'react'
-import type {
-  KeyboardEvent as ReactKeyboardEvent,
-  MouseEvent as ReactMouseEvent,
-} from 'react'
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
 import type { Todo } from '../types'
 import { useRowDrag } from '../hooks/useRowDrag'
 import { TodoItem } from './TodoItem'
@@ -48,10 +45,12 @@ export function TodoList({
     onReorderTo(id, target)
   }
 
-  function handleLabelClick(event: ReactMouseEvent) {
-    if (!drag.openSwipeId) return
-    event.preventDefault()
-    drag.setOpenSwipeId(null)
+  function handleRowClick(id: string) {
+    if (drag.openSwipeId) {
+      drag.setOpenSwipeId(null)
+      return
+    }
+    onOpenDetails(id)
   }
 
   function handleSwipeDelete(id: string) {
@@ -74,7 +73,6 @@ export function TodoList({
           rowTransitionNone={drag.isSwipeDragging(todo.id)}
           isReorderActive={drag.isReorderActive(todo.id)}
           liStyle={drag.getItemStyle(index, todo.id)}
-          isSwipeOpen={drag.openSwipeId === todo.id}
           isInMyDay={todo.myDay === today}
           onToggle={onToggle}
           onToggleMyDay={onToggleMyDay}
@@ -86,9 +84,8 @@ export function TodoList({
           }
           onRowPointerMove={drag.handleRowPointerMove}
           onRowPointerUp={drag.handleRowPointerUp}
-          onLabelClick={handleLabelClick}
           onSwipeDelete={() => handleSwipeDelete(todo.id)}
-          onOpenDetails={() => onOpenDetails(todo.id)}
+          onRowClick={() => handleRowClick(todo.id)}
         />
       ))}
     </ul>
