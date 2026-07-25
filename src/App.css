@@ -1282,14 +1282,9 @@
 }
 
 @media (max-width: 640px) {
-  .mode-switch-label {
-    display: none;
-  }
-
   .mode-switch button {
-    width: 44px;
-    height: 44px;
-    padding: 0;
+    min-height: 44px;
+    padding: 6px 10px;
   }
 
   .note-toolbar-button .note-toolbar-label {
