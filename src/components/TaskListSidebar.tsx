@@ -177,6 +177,7 @@ export function TaskListSidebar({
                       type="button"
                       className="task-list-drag-handle"
                       aria-label={`Reordenar lista "${list.name}" (flechas arriba/abajo)`}
+                      title="Arrastra o usa flechas arriba/abajo"
                       onKeyDown={(event) =>
                         handleReorderKeyDown(event, index, list.id)
                       }

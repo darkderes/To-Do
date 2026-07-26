@@ -12,6 +12,7 @@ import type { Note, Notebook } from '../types'
 
 type NotesUndo =
   | { kind: 'note'; note: Note; index: number }
+  | { kind: 'notebook'; notebook: Notebook; index: number; notes: Note[] }
   | {
       kind: 'content'
       noteId: string
@@ -84,6 +85,13 @@ export function NotesArea({
     onCloseSidebar()
   }
 
+  function openNote(note: Note) {
+    if (note.notebookId !== selectedNotebookId) {
+      setSelectedNotebookId(note.notebookId)
+    }
+    setActiveNoteId(note.id)
+  }
+
   function addNotebook(name: string) {
     const newNotebook: Notebook = { id: crypto.randomUUID(), name }
     setNotebooks((current) => [...current, newNotebook])
@@ -100,15 +108,14 @@ export function NotesArea({
 
   function deleteNotebook(id: string) {
     if (notebooks.length <= 1) return
-    const notebook = notebooks.find((candidate) => candidate.id === id)
-    const noteCount = notes.filter((note) => note.notebookId === id).length
-    if (noteCount > 0) {
-      const noun = noteCount === 1 ? 'nota' : 'notas'
-      const confirmed = window.confirm(
-        `"${notebook?.name}" tiene ${noteCount} ${noun}. ¿Eliminar el notebook y sus notas?`,
-      )
-      if (!confirmed) return
-    }
+    const index = notebooks.findIndex((candidate) => candidate.id === id)
+    if (index === -1) return
+    undoQueue.push({
+      kind: 'notebook',
+      notebook: notebooks[index],
+      index,
+      notes: notes.filter((note) => note.notebookId === id),
+    })
     const remaining = notebooks.filter((candidate) => candidate.id !== id)
     setNotebooks(remaining)
     setNotes((current) => current.filter((note) => note.notebookId !== id))
@@ -172,6 +179,14 @@ export function NotesArea({
         restored.splice(Math.min(index, restored.length), 0, restoredNote)
         return restored
       })
+    } else if (entry.item.kind === 'notebook') {
+      const { notebook, index, notes: notebookNotes } = entry.item
+      setNotebooks((current) => {
+        const restored = [...current]
+        restored.splice(Math.min(index, restored.length), 0, notebook)
+        return restored
+      })
+      setNotes((current) => [...current, ...notebookNotes])
     } else {
       const { noteId, content, images } = entry.item
       setNotes((current) =>
@@ -209,12 +224,14 @@ export function NotesArea({
   const visibleNotes = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
     if (!query) return notebookNotes
-    return notebookNotes.filter(
-      (note) =>
-        note.title.toLowerCase().includes(query) ||
-        note.content.toLowerCase().includes(query),
-    )
-  }, [notebookNotes, searchQuery])
+    return notes
+      .filter(
+        (note) =>
+          note.title.toLowerCase().includes(query) ||
+          note.content.toLowerCase().includes(query),
+      )
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+  }, [notes, notebookNotes, searchQuery])
   const activeNote = notes.find((note) => note.id === activeNoteId)
 
   return (
@@ -231,7 +248,7 @@ export function NotesArea({
         userMenuTop={userMenuTop}
         modeSwitch={modeSwitch}
       />
-      <main className="app-content">
+      <main id="main-content" className="app-content">
         <div className="app-header">
           <button
             type="button"
@@ -269,7 +286,7 @@ export function NotesArea({
                 <Plus aria-hidden="true" size={16} weight="bold" /> Nueva nota
               </button>
             </div>
-            {notebookNotes.length > 0 && (
+            {notes.length > 0 && (
               <div className="notes-search input-with-icon">
                 <span className="input-icon" aria-hidden="true">
                   <MagnifyingGlass size={16} />
@@ -277,31 +294,37 @@ export function NotesArea({
                 <input
                   type="search"
                   value={searchQuery}
-                  placeholder="Buscar notas"
-                  aria-label="Buscar notas en este notebook"
+                  placeholder="Buscar en todos los notebooks"
+                  aria-label="Buscar notas en todos los notebooks"
                   onChange={(event) => setSearchQuery(event.target.value)}
                 />
               </div>
             )}
-            {notebookNotes.length === 0 ? (
+            {notebookNotes.length === 0 && !searchQuery.trim() ? (
               <p className="empty-state">
                 Aún no hay notas — crea la primera con «Nueva nota».
               </p>
             ) : visibleNotes.length === 0 ? (
               <p className="empty-state">
-                Sin resultados para «{searchQuery.trim()}».
+                Sin resultados para «{searchQuery.trim()}» en ningún notebook.
               </p>
             ) : (
               <ul className="note-cards">
                 {visibleNotes.map((note) => {
                   const title = note.title.trim() || 'Sin título'
                   const snippet = noteSnippet(note.content)
+                  const sourceNotebook =
+                    note.notebookId !== selectedNotebookId
+                      ? notebooks.find(
+                          (notebook) => notebook.id === note.notebookId,
+                        )
+                      : undefined
                   return (
                     <li key={note.id} className="note-card">
                       <button
                         type="button"
                         className="note-card-open"
-                        onClick={() => setActiveNoteId(note.id)}
+                        onClick={() => openNote(note)}
                       >
                         <span className="note-card-title">{title}</span>
                         <span className="note-card-snippet">
@@ -309,6 +332,7 @@ export function NotesArea({
                         </span>
                         <span className="note-card-date">
                           {formatDate(note.updatedAt)}
+                          {sourceNotebook ? ` · ${sourceNotebook.name}` : ''}
                         </span>
                       </button>
                       <button
@@ -331,10 +355,15 @@ export function NotesArea({
         items={undoQueue.entries.map((entry) => ({
           id: entry.id,
           message:
-            entry.item.kind === 'note' ? 'Nota eliminada' : 'Elemento quitado',
-          focusOnMount: entry.item.kind === 'note',
+            entry.item.kind === 'note'
+              ? 'Nota eliminada'
+              : entry.item.kind === 'notebook'
+                ? 'Notebook eliminado'
+                : 'Elemento quitado',
+          focusOnMount: entry.item.kind !== 'content',
         }))}
         onUndo={undoAction}
+        onDismiss={undoQueue.dismiss}
         onPause={undoQueue.pause}
         onResume={undoQueue.resume}
       />

@@ -53,21 +53,46 @@ export function TodoDetailModal({
   const [priorityDraft, setPriorityDraft] = useState<Priority | ''>(
     todo.priority ?? '',
   )
+  const [completedDraft, setCompletedDraft] = useState(todo.completed)
   const [showCustomDate, setShowCustomDate] = useState(
     !!todo.dueDate &&
       todo.dueDate !== today &&
       todo.dueDate !== addDaysToIso(today, 1),
   )
   const titleInputRef = useRef<HTMLInputElement>(null)
+  const dialogRef = useRef<HTMLDialogElement>(null)
   const tomorrow = addDaysToIso(today, 1)
 
+  const isDirty =
+    textDraft !== todo.text ||
+    descriptionDraft !== (todo.description ?? '') ||
+    dueDateDraft !== (todo.dueDate ?? '') ||
+    priorityDraft !== (todo.priority ?? '') ||
+    completedDraft !== todo.completed
+
   useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') onClose()
+    const dialog = dialogRef.current
+    if (!dialog || dialog.open) return
+    if (typeof dialog.showModal === 'function') dialog.showModal()
+    else dialog.setAttribute('open', '')
+    titleInputRef.current?.focus()
+  }, [])
+
+  function closeDialog() {
+    const dialog = dialogRef.current
+    if (dialog?.open && typeof dialog.close === 'function') dialog.close()
+    onClose()
+  }
+
+  function requestClose() {
+    if (
+      isDirty &&
+      !window.confirm('Hay cambios sin guardar. ¿Descartarlos?')
+    ) {
+      return
     }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+    closeDialog()
+  }
 
   function pickDate(value: string) {
     setDueDateDraft((current) => (current === value ? '' : value))
@@ -90,23 +115,35 @@ export function TodoDetailModal({
       dueDate: dueDateDraft || undefined,
       priority: priorityDraft || undefined,
     })
-    onClose()
+    if (completedDraft !== todo.completed) onToggle(todo.id)
+    closeDialog()
   }
 
   function handleDelete() {
     onDelete(todo.id)
-    onClose()
+    closeDialog()
   }
 
   return (
-    <div className="todo-modal-backdrop" onClick={onClose}>
-      <div
-        className="todo-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Detalles de la tarea"
-        onClick={(event) => event.stopPropagation()}
-      >
+    <dialog
+      ref={dialogRef}
+      className="todo-modal-dialog"
+      aria-label="Detalles de la tarea"
+      onKeyDown={(event) => {
+        if (event.key !== 'Escape') return
+        event.preventDefault()
+        requestClose()
+      }}
+      onCancel={(event) => {
+        event.preventDefault()
+        requestClose()
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) requestClose()
+      }}
+    >
+      <div className="todo-modal">
+        <h2 className="sr-only">Detalles de la tarea</h2>
         <div className="todo-modal-header">
           <span className="todo-modal-eyebrow">
             {listName} · {formatHeaderDate(today)}
@@ -115,7 +152,7 @@ export function TodoDetailModal({
             type="button"
             className="todo-modal-close"
             aria-label="Cerrar"
-            onClick={onClose}
+            onClick={requestClose}
           >
             <X aria-hidden="true" size={18} />
           </button>
@@ -124,18 +161,18 @@ export function TodoDetailModal({
         <div className="todo-modal-title-row">
           <input
             type="checkbox"
-            checked={todo.completed}
+            checked={completedDraft}
             aria-label={
-              todo.completed
+              completedDraft
                 ? 'Marcar como pendiente'
                 : 'Marcar como completada'
             }
-            onChange={() => onToggle(todo.id)}
+            onChange={() => setCompletedDraft((value) => !value)}
           />
           <input
             ref={titleInputRef}
             type="text"
-            className={`todo-modal-title-input${todo.completed ? ' completed' : ''}`}
+            className={`todo-modal-title-input${completedDraft ? ' completed' : ''}`}
             value={textDraft}
             aria-label="Título de la tarea"
             onChange={(event) => setTextDraft(event.target.value)}
@@ -219,7 +256,7 @@ export function TodoDetailModal({
             <button
               type="button"
               className="todo-modal-cancel"
-              onClick={onClose}
+              onClick={closeDialog}
             >
               Cancelar
             </button>
@@ -233,6 +270,6 @@ export function TodoDetailModal({
           </div>
         </div>
       </div>
-    </div>
+    </dialog>
   )
 }

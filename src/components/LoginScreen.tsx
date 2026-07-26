@@ -37,26 +37,32 @@ export function LoginScreen({ sync }: LoginScreenProps) {
             ? 'Inicia sesión para ver tus tareas y notas en todos tus dispositivos.'
             : 'Crea tu cuenta para sincronizar tareas y notas.'}
         </p>
-        <input
-          type="email"
-          value={email}
-          placeholder="Email"
-          aria-label="Email"
-          autoComplete="email"
-          autoFocus
-          required
-          onChange={(event) => setEmail(event.target.value)}
-        />
-        <input
-          type="password"
-          value={password}
-          placeholder="Contraseña"
-          aria-label="Contraseña"
-          autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-          required
-          minLength={6}
-          onChange={(event) => setPassword(event.target.value)}
-        />
+        <div className="login-field">
+          <label htmlFor="login-email">Email</label>
+          <input
+            id="login-email"
+            type="email"
+            value={email}
+            autoComplete="email"
+            autoFocus
+            required
+            onChange={(event) => setEmail(event.target.value)}
+          />
+        </div>
+        <div className="login-field">
+          <label htmlFor="login-password">Contraseña</label>
+          <input
+            id="login-password"
+            type="password"
+            value={password}
+            autoComplete={
+              mode === 'signin' ? 'current-password' : 'new-password'
+            }
+            required
+            minLength={6}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+        </div>
         {(localError ?? sync.authError) && (
           <p className="login-error" role="alert">
             {localError ?? sync.authError}

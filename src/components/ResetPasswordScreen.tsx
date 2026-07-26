@@ -29,17 +29,19 @@ export function ResetPasswordScreen({ sync }: ResetPasswordScreenProps) {
         <p className="login-subtitle">
           Elige una contraseña nueva para tu cuenta.
         </p>
-        <input
-          type="password"
-          value={password}
-          placeholder="Nueva contraseña"
-          aria-label="Nueva contraseña"
-          autoComplete="new-password"
-          autoFocus
-          required
-          minLength={6}
-          onChange={(event) => setPassword(event.target.value)}
-        />
+        <div className="login-field">
+          <label htmlFor="reset-password">Nueva contraseña</label>
+          <input
+            id="reset-password"
+            type="password"
+            value={password}
+            autoComplete="new-password"
+            autoFocus
+            required
+            minLength={6}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+        </div>
         {sync.authError && (
           <p className="login-error" role="alert">
             {sync.authError}

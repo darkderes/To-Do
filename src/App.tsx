@@ -35,6 +35,7 @@ const DEFAULT_LISTS: TaskList[] = [{ id: DEFAULT_LIST_ID, name: 'Mis tareas' }]
 type PendingUndo =
   | { kind: 'delete'; todo: Todo; index: number }
   | { kind: 'complete'; todoId: string }
+  | { kind: 'deleteList'; list: TaskList; index: number; todos: Todo[] }
 
 function App() {
   const [lists, setLists] = useLocalStorage<TaskList[]>(
@@ -162,15 +163,14 @@ function App() {
 
   function deleteList(id: string) {
     if (lists.length <= 1) return
-    const list = lists.find((candidate) => candidate.id === id)
-    const listTodoCount = todos.filter((todo) => todo.listId === id).length
-    if (listTodoCount > 0) {
-      const noun = listTodoCount === 1 ? 'tarea' : 'tareas'
-      const confirmed = window.confirm(
-        `"${list?.name}" tiene ${listTodoCount} ${noun}. ¿Eliminar la lista y sus tareas?`,
-      )
-      if (!confirmed) return
-    }
+    const index = lists.findIndex((candidate) => candidate.id === id)
+    if (index === -1) return
+    undoQueue.push({
+      kind: 'deleteList',
+      list: lists[index],
+      index,
+      todos: todos.filter((todo) => todo.listId === id),
+    })
     const remaining = lists.filter((candidate) => candidate.id !== id)
     setLists(remaining)
     setTodos((current) => current.filter((todo) => todo.listId !== id))
@@ -253,6 +253,14 @@ function App() {
         restored.splice(index, 0, restoredTodo)
         return restored
       })
+    } else if (entry.item.kind === 'deleteList') {
+      const { list, index, todos: listTodos } = entry.item
+      setLists((current) => {
+        const restored = [...current]
+        restored.splice(Math.min(index, restored.length), 0, list)
+        return restored
+      })
+      setTodos((current) => [...current, ...listTodos])
     } else {
       const { todoId } = entry.item
       setTodos((current) =>
@@ -279,7 +287,8 @@ function App() {
     () =>
       todos.filter((todo) =>
         isMyDay
-          ? todo.myDay === today
+          ? todo.myDay === today ||
+            (!todo.completed && !!todo.dueDate && todo.dueDate < today)
           : (todo.listId ?? DEFAULT_LIST_ID) === selectedListId,
       ),
     [todos, selectedListId, isMyDay, today],
@@ -349,6 +358,9 @@ function App() {
 
   return (
     <div className="app">
+      <a className="skip-link" href="#main-content">
+        Saltar al contenido
+      </a>
       {isSidebarOpen && (
         <div
           className="sidebar-backdrop"
@@ -383,7 +395,7 @@ function App() {
             userMenuTop={userMenuHeader}
             modeSwitch={<ModeSwitch mode={mode} onChange={switchMode} />}
           />
-          <main className="app-content">
+          <main id="main-content" className="app-content">
             <div className="app-header">
               <button
                 type="button"
@@ -465,10 +477,13 @@ function App() {
               message:
                 entry.item.kind === 'delete'
                   ? 'Tarea eliminada'
-                  : 'Tarea completada',
-              focusOnMount: entry.item.kind === 'delete',
+                  : entry.item.kind === 'deleteList'
+                    ? 'Lista eliminada'
+                    : 'Tarea completada',
+              focusOnMount: entry.item.kind !== 'complete',
             }))}
             onUndo={undoAction}
+            onDismiss={undoQueue.dismiss}
             onPause={undoQueue.pause}
             onResume={undoQueue.resume}
           />

@@ -77,7 +77,7 @@ export function TodoItem({
           if (
             event.target instanceof Element &&
             event.target.closest(
-              'input[type="checkbox"], .my-day-toggle, .todo-drag-handle',
+              'input[type="checkbox"], .my-day-toggle, .todo-drag-handle, .todo-item-text',
             )
           ) {
             return
@@ -92,20 +92,26 @@ export function TodoItem({
               type="button"
               className="todo-drag-handle"
               aria-label={`Reordenar "${todo.text}" (flechas arriba/abajo)`}
+              title="Arrastra o usa flechas arriba/abajo"
               onKeyDown={onReorderKeyDown}
             >
               <DotsSixVertical aria-hidden="true" size={18} />
             </button>
-            <label>
-              <input
-                type="checkbox"
-                checked={todo.completed}
-                onChange={() => onToggle(todo.id)}
-              />
+            <input
+              type="checkbox"
+              checked={todo.completed}
+              aria-label={todo.text}
+              onChange={() => onToggle(todo.id)}
+            />
+            <button
+              type="button"
+              className="todo-item-text"
+              onClick={onRowClick}
+            >
               <span className={todo.completed ? 'completed' : ''}>
                 {todo.text}
               </span>
-            </label>
+            </button>
           </div>
           <div className="todo-item-actions">
             <button

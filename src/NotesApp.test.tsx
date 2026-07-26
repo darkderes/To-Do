@@ -187,6 +187,44 @@ describe('Notes', () => {
     expect(screen.getByText(/sin resultados para «zzz»/i)).toBeInTheDocument()
   })
 
+  it('finds notes from other notebooks and opens them switching notebook', async () => {
+    const user = userEvent.setup()
+    window.localStorage.setItem('appMode', JSON.stringify('notes'))
+    window.localStorage.setItem(
+      'notebooks',
+      JSON.stringify([
+        { id: 'notebook-default', name: 'Mi notebook' },
+        { id: 'nb2', name: 'Personal' },
+      ]),
+    )
+    window.localStorage.setItem(
+      'notes',
+      JSON.stringify([
+        {
+          id: 'n1',
+          notebookId: 'nb2',
+          title: 'Viaje',
+          content: 'Kioto en otoño',
+          images: {},
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      ]),
+    )
+    render(<App />)
+
+    await user.type(screen.getByLabelText(/buscar notas/i), 'kioto')
+
+    const card = screen.getByText('Viaje')
+    expect(card).toBeInTheDocument()
+    expect(screen.getByText(/· Personal/)).toBeInTheDocument()
+
+    await user.click(card)
+
+    expect(screen.getByLabelText(/título de la nota/i)).toHaveValue('Viaje')
+    expect(screen.getByRole('heading', { name: 'Personal' })).toBeVisible()
+  })
+
   it('restores a removed embed via the undo toast', async () => {
     const user = userEvent.setup()
     window.localStorage.setItem('appMode', JSON.stringify('notes'))
@@ -245,8 +283,7 @@ describe('Notes', () => {
     expect(screen.getByText('Nota personal')).toBeInTheDocument()
   })
 
-  it('deletes a notebook with its notes after confirming, falling back to another notebook', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+  it('deletes a notebook with its notes via an undo toast, falling back to another notebook', async () => {
     const user = userEvent.setup()
     window.localStorage.setItem('appMode', JSON.stringify('notes'))
     render(<App />)
@@ -265,11 +302,16 @@ describe('Notes', () => {
       screen.getByRole('button', { name: /eliminar notebook "trabajo"/i }),
     )
 
-    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('Trabajo'))
+    expect(screen.getByText('Notebook eliminado')).toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: 'Trabajo' }),
     ).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Mi notebook' })).toBeVisible()
+
+    await user.click(screen.getByRole('button', { name: /deshacer/i }))
+
+    await user.click(screen.getByRole('button', { name: 'Trabajo' }))
+    expect(screen.getByText('Informe')).toBeInTheDocument()
   })
 
   it('converts a URL line into an inline embed when pressing Enter', async () => {

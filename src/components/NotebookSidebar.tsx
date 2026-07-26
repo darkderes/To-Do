@@ -163,6 +163,7 @@ export function NotebookSidebar({
                       type="button"
                       className="task-list-drag-handle"
                       aria-label={`Reordenar notebook "${notebook.name}" (flechas arriba/abajo)`}
+                      title="Arrastra o usa flechas arriba/abajo"
                       onKeyDown={(event) =>
                         handleReorderKeyDown(event, index, notebook.id)
                       }

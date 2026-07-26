@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { X } from '@phosphor-icons/react'
 
 export interface ToastItem {
   id: string
@@ -9,6 +10,7 @@ export interface ToastItem {
 interface UndoToastStackProps {
   items: ToastItem[]
   onUndo: (id: string) => void
+  onDismiss: (id: string) => void
   onPause: (id: string) => void
   onResume: (id: string) => void
 }
@@ -16,6 +18,7 @@ interface UndoToastStackProps {
 export function UndoToastStack({
   items,
   onUndo,
+  onDismiss,
   onPause,
   onResume,
 }: UndoToastStackProps) {
@@ -49,6 +52,14 @@ export function UndoToastStack({
             onClick={() => onUndo(item.id)}
           >
             Deshacer
+          </button>
+          <button
+            type="button"
+            className="toast-close"
+            aria-label="Descartar aviso"
+            onClick={() => onDismiss(item.id)}
+          >
+            <X aria-hidden="true" size={14} />
           </button>
         </div>
       ))}

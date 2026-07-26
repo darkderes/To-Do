@@ -82,7 +82,7 @@ export function UserMenu({
       <button
         type="button"
         className={`user-menu-trigger user-menu-trigger--${placement}`}
-        aria-haspopup="menu"
+        aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
@@ -100,7 +100,8 @@ export function UserMenu({
       {open && (
         <div
           className={`user-menu-popover user-menu-popover--${placement}`}
-          role="menu"
+          role="dialog"
+          aria-label="Perfil y configuración"
         >
           <div className="user-menu-header">
             <span className="user-menu-avatar-large" aria-hidden="true">
@@ -173,7 +174,7 @@ export function UserMenu({
           </div>
           {showAccount && (
             <div className="sync-panel">
-              <p className="sync-status">
+              <p className="sync-status" role="status">
                 {sync.status === 'error' ? (
                   <CloudSlash aria-hidden="true" size={16} />
                 ) : sync.status === 'syncing' ? (

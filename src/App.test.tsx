@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from './App'
 import { getTodayString } from './types'
@@ -186,8 +186,7 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'Personal' })).toBeInTheDocument()
   })
 
-  it('deletes a list and its tasks after confirming, falling back to another list', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+  it('deletes a list and its tasks with an undo toast, falling back to another list', async () => {
     const user = userEvent.setup()
     render(<App />)
 
@@ -204,7 +203,7 @@ describe('App', () => {
       screen.getByRole('button', { name: /eliminar lista "work"/i }),
     )
 
-    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('Work'))
+    expect(screen.getByText('Lista eliminada')).toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: 'Work' }),
     ).not.toBeInTheDocument()
@@ -213,8 +212,7 @@ describe('App', () => {
     ).toBeInTheDocument()
   })
 
-  it('keeps a list and its tasks when the deletion is not confirmed', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
+  it('restores a deleted list and its tasks via the undo toast', async () => {
     const user = userEvent.setup()
     render(<App />)
 
@@ -230,8 +228,10 @@ describe('App', () => {
     await user.click(
       screen.getByRole('button', { name: /eliminar lista "work"/i }),
     )
+    await user.click(screen.getByRole('button', { name: /deshacer/i }))
 
-    expect(screen.getByRole('button', { name: 'Work' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Work' }))
+    expect(screen.getByText('Ship feature')).toBeInTheDocument()
   })
 
   it('edits a todo title from the details modal', async () => {
@@ -253,7 +253,8 @@ describe('App', () => {
     expect(screen.queryByText('Buy milk')).not.toBeInTheDocument()
   })
 
-  it('cancels a todo edit with Escape, keeping the original text', async () => {
+  it('cancels a todo edit with Escape after confirming the discard', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
     const user = userEvent.setup()
     render(<App />)
 
@@ -268,8 +269,90 @@ describe('App', () => {
     await user.type(input, 'Something else')
     await user.keyboard('{Escape}')
 
+    expect(confirmSpy).toHaveBeenCalled()
     expect(screen.getByText('Buy milk')).toBeInTheDocument()
     expect(screen.queryByText('Something else')).not.toBeInTheDocument()
+    confirmSpy.mockRestore()
+  })
+
+  it('keeps the modal open when the discard is not confirmed', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+    await user.click(screen.getByText('Buy milk'))
+
+    const input = screen.getByLabelText(/título de la tarea/i)
+    await user.clear(input)
+    await user.type(input, 'Something else')
+    await user.keyboard('{Escape}')
+
+    expect(confirmSpy).toHaveBeenCalled()
+    expect(screen.getByLabelText(/título de la tarea/i)).toBeInTheDocument()
+    confirmSpy.mockRestore()
+  })
+
+  it('closes the modal with Escape without confirmation when nothing changed', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm')
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+    await user.click(screen.getByText('Buy milk'))
+    await user.keyboard('{Escape}')
+
+    expect(confirmSpy).not.toHaveBeenCalled()
+    expect(
+      screen.queryByLabelText(/título de la tarea/i),
+    ).not.toBeInTheDocument()
+    confirmSpy.mockRestore()
+  })
+
+  it('opens the details modal with the keyboard via the task text button', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+    const textButton = screen.getByRole('button', { name: 'Buy milk' })
+    textButton.focus()
+    await user.keyboard('{Enter}')
+
+    expect(screen.getByLabelText(/título de la tarea/i)).toBeInTheDocument()
+  })
+
+  it('only applies the modal completion checkbox after saving', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+
+    await user.click(screen.getByText('Buy milk'))
+    await user.click(screen.getByLabelText(/marcar como completada/i))
+    await user.keyboard('{Escape}')
+
+    expect(confirmSpy).toHaveBeenCalled()
+    expect(screen.queryByText(/completadas \(1\)/i)).not.toBeInTheDocument()
+
+    await user.click(screen.getByText('Buy milk'))
+    await user.click(screen.getByLabelText(/marcar como completada/i))
+    await user.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    expect(screen.getByText(/completadas \(1\)/i)).toBeInTheDocument()
+    confirmSpy.mockRestore()
   })
 
   it('shows an undo toast when completing a task, without stealing focus', async () => {
@@ -706,7 +789,12 @@ describe('App', () => {
       screen.getByRole('button', { name: 'Mis tareas' }),
     ).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /deshacer/i }))
+    const taskToast = screen.getByText('Tarea eliminada').closest('.toast')!
+    await user.click(
+      within(taskToast as HTMLElement).getByRole('button', {
+        name: /deshacer/i,
+      }),
+    )
 
     expect(screen.getByText('Ship feature')).toBeInTheDocument()
   })
@@ -962,7 +1050,7 @@ describe('App', () => {
     fireEvent.pointerMove(row, { clientX: 20, clientY: 80, pointerId: 1 })
     fireEvent.pointerUp(row, { clientX: 20, clientY: 80, pointerId: 1 })
 
-    const items = document.querySelectorAll('.todo-item-main label span')
+    const items = document.querySelectorAll('.todo-item-main .todo-item-text span')
     expect(items[0]).toHaveTextContent('Walk dog')
     expect(items[1]).toHaveTextContent('Buy milk')
   })
@@ -1075,6 +1163,52 @@ describe('App', () => {
       screen.getByRole('button', { name: /quitar "buy milk" de mi día/i }),
     )
     expect(screen.getByText(/nada marcado para hoy/i)).toBeInTheDocument()
+  })
+
+  it('shows overdue tasks from any list in "Mi día" automatically', async () => {
+    window.localStorage.setItem(
+      'todos',
+      JSON.stringify([
+        {
+          id: '1',
+          text: 'Old task',
+          completed: false,
+          listId: 'default',
+          dueDate: '2000-01-01',
+        },
+        {
+          id: '2',
+          text: 'Done old task',
+          completed: true,
+          listId: 'default',
+          dueDate: '2000-01-01',
+        },
+      ]),
+    )
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'Mi día' }))
+
+    expect(screen.getByText('Old task')).toBeInTheDocument()
+    expect(screen.queryByText('Done old task')).not.toBeInTheDocument()
+  })
+
+  it('dismisses an undo toast with its close button without undoing', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(
+      screen.getByLabelText(/texto de la nueva tarea/i),
+      'Buy milk{Enter}',
+    )
+    await user.click(screen.getByRole('checkbox'))
+
+    expect(screen.getByText('Tarea completada')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /descartar aviso/i }))
+
+    expect(screen.queryByText('Tarea completada')).not.toBeInTheDocument()
+    expect(screen.getByText(/completadas \(1\)/i)).toBeInTheDocument()
   })
 
   it('adds tasks created while viewing "Mi día" to the last real list used, flagged for today', async () => {

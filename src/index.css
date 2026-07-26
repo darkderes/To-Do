@@ -9,6 +9,8 @@
   --accent: var(--accent-light);
   --on-accent: var(--bg);
   --danger: #b91c1c;
+  --danger-bg: #dc2626;
+  --on-danger: #fff;
 
   --priority-low-bg: #dcfce7;
   --priority-low-text: #166534;
@@ -50,6 +52,41 @@
 
 body {
   margin: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: fixed;
+  top: -100px;
+  left: 16px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: 0 0 8px 8px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 500;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+
+.skip-link:focus-visible {
+  top: 0;
 }
 
 input::placeholder,
