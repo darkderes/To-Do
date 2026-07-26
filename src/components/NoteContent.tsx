@@ -52,7 +52,14 @@ function renderBlock(block: NoteBlock, key: number) {
         </div>
       )
     case 'link-card': {
-      const domain = new URL(block.url).hostname.replace(/^www\./, '')
+      // URL_PATTERN acepta cadenas que el constructor URL rechaza (p. ej.
+      // "https://%"): sin el try/catch una nota con ese texto rompe el render.
+      let domain: string
+      try {
+        domain = new URL(block.url).hostname.replace(/^www\./, '')
+      } catch {
+        domain = block.url
+      }
       return (
         <a
           key={key}

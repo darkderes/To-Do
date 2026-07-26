@@ -13,6 +13,33 @@ interface CloudSyncArgs {
 
 const PUSH_DEBOUNCE_MS = 1500
 
+// El jsonb remoto llega sin garantías de forma (versión vieja de la app,
+// fila editada a mano, bug en otro dispositivo). Normaliza colecciones a
+// arrays y filtra elementos sin id para que un estado corrupto no rompa la
+// app en todos los dispositivos sincronizados.
+function sanitizeRemoteState(remote: unknown): SyncedState {
+  const record = (
+    remote && typeof remote === 'object' ? remote : {}
+  ) as Partial<SyncedState>
+  function asArray<T extends { id: string }>(value: T[] | undefined): T[] {
+    if (!Array.isArray(value)) return []
+    return value.filter(
+      (item): item is T =>
+        item !== null && typeof item === 'object' && typeof item.id === 'string',
+    )
+  }
+  return {
+    taskLists: asArray(record.taskLists),
+    todos: asArray(record.todos),
+    notebooks: asArray(record.notebooks),
+    notes: asArray(record.notes),
+    profile:
+      record.profile && typeof record.profile === 'object'
+        ? record.profile
+        : { avatar: null, avatarUpdatedAt: 0 },
+  }
+}
+
 export function useCloudSync({ state, applyRemote }: CloudSyncArgs) {
   const [session, setSession] = useState<Session | null>(null)
   const [authReady, setAuthReady] = useState(supabase === null)
@@ -84,9 +111,8 @@ export function useCloudSync({ state, applyRemote }: CloudSyncArgs) {
         setStatus('error')
         return
       }
-      const remote = data?.data as SyncedState | undefined
-      const merged = remote
-        ? mergeState(remote, stateRef.current)
+      const merged = data?.data
+        ? mergeState(sanitizeRemoteState(data.data), stateRef.current)
         : stateRef.current
       skipPushRef.current = true
       applyRemote(merged)
@@ -126,8 +152,9 @@ export function useCloudSync({ state, applyRemote }: CloudSyncArgs) {
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
-          const remote = (payload.new as { data?: SyncedState } | null)?.data
-          if (!remote) return
+          const raw = (payload.new as { data?: unknown } | null)?.data
+          if (!raw) return
+          const remote = sanitizeRemoteState(raw)
           const remoteJson = JSON.stringify(remote)
           if (remoteJson === JSON.stringify(stateRef.current)) return
           if (remoteJson === lastPushedRef.current) return

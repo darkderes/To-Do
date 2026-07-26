@@ -10,18 +10,7 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <title>Tareas</title>
-    <script>
-      ;(function () {
-        var stored = localStorage.getItem('theme')
-        var theme =
-          stored === 'light' || stored === 'dark'
-            ? stored
-            : window.matchMedia('(prefers-color-scheme: dark)').matches
-              ? 'dark'
-              : 'light'
-        document.documentElement.dataset.theme = theme
-      })()
-    </script>
+    <script src="/theme-init.js"></script>
   </head>
   <body>
     <div id="root"></div>
