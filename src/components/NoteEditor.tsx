@@ -285,6 +285,7 @@ export function NoteEditor({
         <button
           type="button"
           className="note-toolbar-button"
+          aria-label="Insertar imagen"
           onClick={() => fileInputRef.current?.click()}
         >
           <ImageSquare aria-hidden="true" size={18} />

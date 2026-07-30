@@ -256,7 +256,7 @@ export function NotesArea({
             ref={sidebarToggleRef}
             aria-expanded={isSidebarOpen}
             aria-controls="task-list-sidebar"
-            aria-label={`Notebooks, notebook actual: ${selectedNotebook?.name ?? ''}`}
+            aria-label={`Cuadernos, cuaderno actual: ${selectedNotebook?.name ?? ''}`}
             onClick={onToggleSidebar}
           >
             <List aria-hidden="true" size={20} />

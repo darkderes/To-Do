@@ -256,7 +256,7 @@ export function TodoDetailModal({
             <button
               type="button"
               className="todo-modal-cancel"
-              onClick={closeDialog}
+              onClick={requestClose}
             >
               Cancelar
             </button>

@@ -402,8 +402,9 @@ describe('App', () => {
     expect(screen.getByText('Hoy')).toBeInTheDocument()
   })
 
-  it('closes the details modal with the cancel button without saving', async () => {
+  it('asks for confirmation when canceling with unsaved changes', async () => {
     const user = userEvent.setup()
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
     render(<App />)
 
     await user.type(
@@ -414,10 +415,14 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: /alta prioridad/i }))
     await user.click(screen.getByRole('button', { name: 'Cancelar' }))
 
+    expect(confirmSpy).toHaveBeenCalledWith(
+      'Hay cambios sin guardar. ¿Descartarlos?',
+    )
     expect(
       screen.queryByRole('button', { name: 'Guardar' }),
     ).not.toBeInTheDocument()
     expect(document.querySelector('.priority-badge')).not.toBeInTheDocument()
+    confirmSpy.mockRestore()
   })
 
   it('undoes a todo deletion within the undo window', async () => {

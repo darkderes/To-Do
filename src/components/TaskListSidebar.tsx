@@ -7,6 +7,7 @@ import {
   Sun,
   X,
 } from '@phosphor-icons/react'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 import { useRowDrag } from '../hooks/useRowDrag'
 import { MY_DAY_ID } from '../types'
 import type { TaskList } from '../types'
@@ -54,6 +55,7 @@ export function TaskListSidebar({
       ?.querySelector<HTMLButtonElement>('.task-list-nav .task-list-button')
       ?.focus()
   }, [isOpen])
+  useFocusTrap({ containerRef: navRef, enabled: isOpen })
 
   function handleSelectClick(id: string) {
     if (drag.openSwipeId) {

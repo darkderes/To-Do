@@ -11,6 +11,7 @@ import {
   UserCircle,
 } from '@phosphor-icons/react'
 import type { CloudSync } from '../hooks/useCloudSync'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 import { IMAGE_TOO_LARGE_MESSAGE, processImageFile } from '../utils/noteContent'
 import { ACCENT_PALETTE } from '../accentPalette'
 import type { Profile } from '../types'
@@ -41,8 +42,10 @@ export function UserMenu({
   const [open, setOpen] = useState(false)
   const [avatarError, setAvatarError] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const popoverRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const showAccount = sync.enabled && !!sync.email
+  useFocusTrap({ containerRef: popoverRef, enabled: open })
 
   useEffect(() => {
     if (!open) return
@@ -99,6 +102,7 @@ export function UserMenu({
       </button>
       {open && (
         <div
+          ref={popoverRef}
           className={`user-menu-popover user-menu-popover--${placement}`}
           role="dialog"
           aria-label="Perfil y configuración"
