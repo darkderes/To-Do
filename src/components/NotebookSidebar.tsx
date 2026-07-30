@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react'
 import { DotsSixVertical, PencilSimple, Plus, X } from '@phosphor-icons/react'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 import { useRowDrag } from '../hooks/useRowDrag'
 import type { Notebook } from '../types'
 
@@ -47,6 +48,7 @@ export function NotebookSidebar({
       ?.querySelector<HTMLButtonElement>('.task-list-nav .task-list-button')
       ?.focus()
   }, [isOpen])
+  useFocusTrap({ containerRef: navRef, enabled: isOpen })
 
   function handleSelectClick(id: string) {
     if (drag.openSwipeId) {
@@ -105,7 +107,7 @@ export function NotebookSidebar({
       id="task-list-sidebar"
       ref={navRef}
       className={`task-list-sidebar${isOpen ? ' open' : ''}`}
-      aria-label="Notebooks"
+      aria-label="Cuadernos"
     >
       {userMenuTop && <div className="sidebar-top-profile">{userMenuTop}</div>}
       <ul className="task-list-nav">
