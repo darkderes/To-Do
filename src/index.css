@@ -3,6 +3,7 @@
   --text-muted: #726b7c;
   --text-h: #08060d;
   --bg: #fff;
+  --surface: #f5f4f8;
   --border: #e5e4e7;
   --accent-light: #9328db;
   --accent-dark: #c084fc;
@@ -37,6 +38,7 @@
   --text-muted: #8b93a1;
   --text-h: #f3f4f6;
   --bg: #16171d;
+  --surface: #22242d;
   --border: #2e303a;
   --accent: var(--accent-dark);
   --on-accent: var(--bg);

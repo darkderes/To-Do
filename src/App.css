@@ -496,12 +496,16 @@
   list-style: none;
   margin: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .todo-item {
   position: relative;
   overflow: hidden;
-  border-bottom: 1px solid var(--border);
+  border-radius: 8px;
+  border: 1px solid var(--border);
 }
 
 .todo-item-reveal {
@@ -509,10 +513,10 @@
 }
 
 .todo-item-row {
-  padding: 8px 0;
+  padding: 8px 12px;
   position: relative;
   z-index: 1;
-  background: var(--bg);
+  background: var(--surface);
   transition: transform 0.2s ease;
   touch-action: pan-y;
 }
@@ -827,7 +831,7 @@
   }
 
   .todo-item-row {
-    padding: 12px 0;
+    padding: 12px 12px;
   }
 
   .my-day-toggle {
